@@ -80,6 +80,24 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
     d.run
   end
 
+  def test_encoded_multibyte_strings
+    # on fluentd v0.14, all strings treated as "ASCII-8BIT" except specified encoding.
+    d = create_driver(DEFAULT_CONFIG)
+
+    client = mock!
+    client.name.once { 'topic-test' }
+    client.publish.once
+
+    pubsub_mock = mock!.topic(anything, anything) { client }
+    gcloud_mock = mock!.pubsub { pubsub_mock }
+    stub(Gcloud).new { gcloud_mock }
+
+    time = Time.parse("2016-07-09 11:12:13 UTC").to_i
+
+    d.emit({"a" => "あああ".force_encoding("ASCII-8BIT")}, time)
+    d.run
+  end
+
   def test_re_raise_errors
     d = create_driver(DEFAULT_CONFIG)
     client = Object.new
