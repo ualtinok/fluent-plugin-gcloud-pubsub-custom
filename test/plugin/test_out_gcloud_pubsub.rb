@@ -48,7 +48,6 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
 
     assert_equal(true, d.instance.autocreate_topic)
 
-    chunk = Fluent::MemoryBufferChunk.new('key', 'data')
     client = mock!
     client.topic("topic-test", autocreate: true).once
 
@@ -57,7 +56,7 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
 
     d.instance.instance_variable_set(:@client, client)
 
-    d.instance.start()
+    d.run
   end
 
   def test_max_messages
@@ -83,7 +82,6 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
 
   def test_re_raise_errors
     d = create_driver(DEFAULT_CONFIG)
-    chunk = Fluent::MemoryBufferChunk.new('key', 'data')
     client = Object.new
     def client.publish
       raise ReRaisedError
@@ -94,7 +92,7 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
     d.instance.instance_variable_set(:@client, client)
 
     assert_raises ReRaisedError do
-      d.instance.write(chunk)
+      d.instance.publish([{'a' => 1, 'b' => 2}])
     end
   end
 end
