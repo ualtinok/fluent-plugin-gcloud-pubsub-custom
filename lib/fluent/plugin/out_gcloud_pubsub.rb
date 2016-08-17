@@ -1,5 +1,6 @@
 require 'gcloud'
 require 'fluent/output'
+require 'yajl'
 
 module Fluent
   class GcloudPubSubOutput < BufferedOutput
@@ -47,7 +48,7 @@ module Fluent
       messages = []
 
       chunk.msgpack_each do |tag, time, record|
-        messages << record.to_json
+        messages << Yajl.dump(record)
       end
 
       if messages.length > 0
