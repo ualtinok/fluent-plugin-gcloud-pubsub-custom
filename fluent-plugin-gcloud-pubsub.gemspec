@@ -17,6 +17,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ['lib']
 
   gem.add_runtime_dependency "fluentd", [">= 0.10.58", "< 2"]
+  gem.add_runtime_dependency "yajl-ruby", "~> 1.0"
   gem.add_runtime_dependency "activesupport", "= 4.2.7.1"
   gem.add_runtime_dependency "gcloud", "= 0.6.3"
   gem.add_runtime_dependency "fluent-plugin-buffer-lightening", ">= 0.0.2"
