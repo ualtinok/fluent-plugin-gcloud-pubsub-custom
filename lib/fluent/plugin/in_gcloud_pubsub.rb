@@ -32,11 +32,6 @@ module Fluent
       configure_parser(conf)
     end
 
-    def configure_parser(conf)
-      @parser = Fluent::TextParser.new
-      @parser.configure(conf)
-    end
-
     def start
       super
 
