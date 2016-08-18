@@ -6,13 +6,6 @@ module Fluent
   class GcloudPubSubOutput < BufferedOutput
     Fluent::Plugin.register_output('gcloud_pubsub', self)
 
-    config_set_default :buffer_type,                'lightening'
-    config_set_default :flush_interval,             1
-    config_set_default :try_flush_interval,         0.05
-    config_set_default :buffer_chunk_records_limit, 900
-    config_set_default :buffer_chunk_limit,         9437184
-    config_set_default :buffer_queue_limit,         64
-
     config_param :project,            :string,  :default => nil
     config_param :topic,              :string,  :default => nil
     config_param :key,                :string,  :default => nil
