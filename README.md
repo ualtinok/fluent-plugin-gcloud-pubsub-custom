@@ -35,6 +35,7 @@ publish dummy json data like `{"message": "dummy", "value": 0}\n{"message": "dum
   topic <YOUR TOPIC>
   key <YOUR KEY>
   flush_interval 10
+  try_flush_interval 1
   autocreate_topic false
   max_messages 1000
 </match>
