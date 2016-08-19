@@ -38,13 +38,18 @@ publish dummy json data like `{"message": "dummy", "value": 0}\n{"message": "dum
   try_flush_interval 1
   autocreate_topic false
   max_messages 1000
+  max_total_size 10000000
 </match>
 ```
 
 - `autocreate_topic` (optional, default: `false`)
   - If set to `true`, specified topic will be created when it doesn't exist.
 - `max_messages` (optional, default: `1000`)
-  - Publishing messages per request to Cloud Pub/Sub. ref: https://cloud.google.com/pubsub/quotas#other_limits
+  - Publishing messages count per request to Cloud Pub/Sub.
+    - see: https://cloud.google.com/pubsub/quotas#other_limits
+- `max_total_size` (optional, default: `10000000` = `10MB`)
+  - Publishing messages bytesize per request to Cloud Pub/Sub.
+    - see: https://cloud.google.com/pubsub/quotas#other_limits
 
 ## Pull messages
 Use `in_gcloud_pubsub`.
@@ -77,4 +82,3 @@ Pull json data from Cloud Pub/Sub
 - `return_immediately`
  - see returnImmediately on https://cloud.google.com/pubsub/subscriber
  - When `return_immediately` is true, this plugin ignore pull_interval
-

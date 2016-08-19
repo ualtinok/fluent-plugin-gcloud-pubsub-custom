@@ -80,6 +80,34 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
     d.run
   end
 
+  def test_max_total_size
+    d = create_driver(<<-EOC)
+      type gcloud_pubsub
+      project project-test
+      topic topic-test
+      key key-test
+      flush_interval 1
+      max_messages 100000
+      max_total_size 1000
+    EOC
+
+    client = mock!
+    client.name.times(2) { 'topic-test' }
+    client.publish.times(2)
+
+    pubsub_mock = mock!.topic(anything, anything) { client }
+    gcloud_mock = mock!.pubsub { pubsub_mock }
+    stub(Gcloud).new { gcloud_mock }
+
+    time = Time.parse("2016-07-09 11:12:13 UTC").to_i
+
+    4.times do
+      d.emit({"a" => "a" * 400}, time)
+    end
+
+    d.run
+  end
+
   def test_encoded_multibyte_strings
     # on fluentd v0.14, all strings treated as "ASCII-8BIT" except specified encoding.
     d = create_driver(DEFAULT_CONFIG)
