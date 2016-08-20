@@ -20,5 +20,21 @@ module Fluent
         end
       end
     end
+
+    class Subscriber
+      def initialize(project, key, topic, subscription)
+        pubsub = (Gcloud.new project, key).pubsub
+        @client = pubsub.subscription subscription
+        raise Fluent::GcloudPubSub::Error "subscription:#{subscription} does not exist." if @client.nil?
+      end
+
+      def pull(immediate, max)
+        @client.pull(immediate, max)
+      end
+
+      def acknowledge(messages)
+        @client.acknowledge(messages)
+      end
+    end
   end
 end

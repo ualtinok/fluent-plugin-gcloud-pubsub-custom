@@ -1,6 +1,7 @@
-require 'gcloud'
 require 'fluent/input'
 require 'fluent/parser'
+
+require 'fluent/plugin/gcloud_pubsub/client'
 
 module Fluent
   class GcloudPubSubInput < Input
@@ -8,9 +9,9 @@ module Fluent
 
     config_param :tag,                :string
     config_param :project,            :string,  :default => nil
-    config_param :topic,              :string,  :default => nil
-    config_param :subscription,       :string,  :default => nil
     config_param :key,                :string,  :default => nil
+    config_param :topic,              :string,  :default => nil
+    config_param :subscription,       :string
     config_param :pull_interval,      :integer, :default => 5
     config_param :max_messages,       :integer, :default => 100
     config_param :return_immediately, :bool,    :default => true
@@ -25,26 +26,18 @@ module Fluent
 
     def configure(conf)
       super
-
-      raise Fluent::ConfigError, "'topic' must be specified." unless @topic
-      raise Fluent::ConfigError, "'subscription' must be specified." unless @subscription
-
       configure_parser(conf)
     end
 
     def start
       super
-
-      pubsub = (Gcloud.new @project, @key).pubsub
-      topic = pubsub.topic @topic
-      @client = topic.subscription @subscription
+      @subscriber = Fluent::GcloudPubSub::Subscriber.new @project, @key, @topic, @subscription
       @stop_subscribing = false
       @subscribe_thread = Thread.new(&method(:subscribe))
     end
 
     def shutdown
       super
-
       @stop_subscribing = true
       @subscribe_thread.join
     end
@@ -57,7 +50,7 @@ module Fluent
 
     def subscribe
       until @stop_subscribing
-        messages = @client.pull max: @max_messages, immediate: @return_immediately
+        messages = @subscriber.pull @return_immediately, @max_messages
 
         if messages.length > 0
           es = parse_messages(messages)
@@ -67,7 +60,7 @@ module Fluent
             rescue
               # ignore errors. Engine shows logs and backtraces.
             end
-            @client.acknowledge messages
+            @subscriber.acknowledge messages
             log.debug "#{messages.length} message(s) processed"
           end
         end
