@@ -116,6 +116,14 @@ Use `gcloud_pubsub` input plugin.
 - `format` (optional, default: `json`)
   - Set input format. See format section in http://docs.fluentd.org/articles/in_tail
 
+## ChangeLog
+
+- Release 0.1.0 - 2016/08/22
+  - Use formatter / parser plugin and add format configuration
+  - Bump up gcloud-ruby to 0.12
+  - Remove dependency on lightening buffer
+  - Fix error caused by Pub/Sub quotas
+
 ## Contributing
 
 1. Fork it
