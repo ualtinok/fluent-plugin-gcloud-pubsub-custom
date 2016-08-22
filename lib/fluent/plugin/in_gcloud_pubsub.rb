@@ -32,6 +32,7 @@ module Fluent
     def start
       super
       @subscriber = Fluent::GcloudPubSub::Subscriber.new @project, @key, @topic, @subscription
+      log.debug "connected subscription:#{@subscription} in project #{@project}"
       @stop_subscribing = false
       @subscribe_thread = Thread.new(&method(:subscribe))
     end

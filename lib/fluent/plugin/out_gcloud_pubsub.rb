@@ -29,6 +29,7 @@ module Fluent
     def start
       super
       @publisher = Fluent::GcloudPubSub::Publisher.new @project, @key, @topic, @autocreate_topic
+      log.debug "connected topic:#{@topic} in project #{@project}"
     end
 
     def format(tag, time, record)
