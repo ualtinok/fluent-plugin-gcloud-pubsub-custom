@@ -1,84 +1,103 @@
 # fluent-plugin-gcloud-pubsub
+
 [![Build Status](https://travis-ci.org/mdoi/fluent-plugin-gcloud-pubsub.svg?branch=master)](https://travis-ci.org/mdoi/fluent-plugin-gcloud-pubsub)
 [![Gem Version](https://badge.fury.io/rb/fluent-plugin-gcloud-pubsub.svg)](http://badge.fury.io/rb/fluent-plugin-gcloud-pubsub)
 
 ## Overview
-[Cloud Pub/Sub](https://cloud.google.com/pubsub/) Input/Output plugin for [Fluentd](http://www.fluentd.org/) with [gcloud](https://googlecloudplatform.github.io/gcloud-ruby/) gem
 
-- Publish BufferedOutput chunk into Cloud Pub/Sub with [batch publishing](http://googlecloudplatform.github.io/gcloud-ruby/docs/v0.2.0/Gcloud/Pubsub/Topic.html#method-i-publish)
-- [Pull](http://googlecloudplatform.github.io/gcloud-ruby/docs/v0.2.0/Gcloud/Pubsub/Subscription.html#method-i-pull) messages from Cloud Pub/Sub
+[Cloud Pub/Sub](https://cloud.google.com/pubsub/) Input/Output(BufferedOutput) plugin for [Fluentd](http://www.fluentd.org/) with [gcloud](https://googlecloudplatform.github.io/gcloud-ruby/) gem
+
+- [Publish](https://googlecloudplatform.github.io/gcloud-ruby/docs/v0.12.2/Gcloud/Pubsub/Topic.html#publish-instance_method) messages to Cloud Pub/Sub
+- [Pull](https://googlecloudplatform.github.io/gcloud-ruby/docs/v0.12.2/Gcloud/Pubsub/Subscription.html#pull-instance_method) messages from Cloud Pub/Sub
 
 ## Preparation
+
 - Create a project on Google Developer Console
 - Add a topic of Cloud Pub/Sub to the project
+  - If you use `out_gcloud_pubsub` and specify `autocreate_topic true`, you don't have to create the topic.
 - Add a pull style subscription to the topic
-- Download your credential (json) 
+- Download your credential (json) or [set scope on GCE instance](https://cloud.google.com/compute/docs/api/how-tos/authorization)
 
-## Publish messages
+## Configuration
+
+### Publish messages
 
 Use `out_gcloud_pubsub`.
 
-### Configuration
-publish dummy json data like `{"message": "dummy", "value": 0}\n{"message": "dummy", "value": 1}\n ...`.
-
 ```
-<source>
-  type dummy
-  tag example.publish
-  rate 100 
-  auto_increment_key value
-</source>
-
 <match example.publish>
-  type gcloud_pubsub
+  @type gcloud_pubsub
   project <YOUR PROJECT>
-  topic <YOUR TOPIC>
   key <YOUR KEY>
-  flush_interval 10
-  try_flush_interval 1
+  topic <YOUR TOPIC>
   autocreate_topic false
   max_messages 1000
   max_total_size 10000000
+  buffer_type file
+  buffer_path /path/to/your/buffer
+  flush_interval 1s
+  try_flush_interval 0.1
 </match>
 ```
 
+- `project` (optional)
+  - Set your GCP project
+  - Running fluentd on GCP, you don't have to specify.
+  - You can also use environment variable such as `GCLOUD_PROJECT`.
+- `key` (optional)
+  - Set your credential file path.
+  - Running fluentd on GCP, you can use scope instead of specifying this.
+  - You can also use environment variable such as `GCLOUD_KEYFILE`.
+- `topic` (required)
+  - Set topic name to publish.
 - `autocreate_topic` (optional, default: `false`)
   - If set to `true`, specified topic will be created when it doesn't exist.
 - `max_messages` (optional, default: `1000`)
   - Publishing messages count per request to Cloud Pub/Sub.
-    - see: https://cloud.google.com/pubsub/quotas#other_limits
+    - See https://cloud.google.com/pubsub/quotas#other_limits
 - `max_total_size` (optional, default: `10000000` = `10MB`)
   - Publishing messages bytesize per request to Cloud Pub/Sub.
-    - see: https://cloud.google.com/pubsub/quotas#other_limits
+    - See https://cloud.google.com/pubsub/quotas#other_limits
+- `buffer_type`, `buffer_path`, `flush_interval`, `try_flush_interval`
+  - These are fluentd buffer configuration. See http://docs.fluentd.org/articles/buffer-plugin-overview
 
-## Pull messages
+### Pull messages
+
 Use `in_gcloud_pubsub`.
-
-### Configuration
-Pull json data from Cloud Pub/Sub
 
 ```
 <source>
-  type gcloud_pubsub
+  @type gcloud_pubsub
   tag example.pull
   project <YOUR PROJECT>
+  key <YOUR KEY>
   topic <YOUR TOPIC>
   subscription <YOUR SUBSCRIPTION>
-  key <YOUR KEY>
   max_messages 1000
   return_immediately true
   pull_interval 2
   format json
 </source>
-
-<match example.pull>
-  type stdout
-</match>
 ```
 
-- `max_messages`
- - see maxMessages on https://cloud.google.com/pubsub/subscriber
-
-- `return_immediately`
- - see returnImmediately on https://cloud.google.com/pubsub/subscriber
- - When `return_immediately` is true, this plugin ignore pull_interval
+- `tag` (required)
+  - Set tag of messages.
+- `project` (optional)
+  - Set your GCP project
+  - Running fluentd on GCP, you don't have to specify.
+  - You can also use environment variable such as `GCLOUD_PROJECT`.
+- `key` (optional)
+  - Set your credential file path.
+  - Running fluentd on GCP, you can use scope instead of specifying this.
+  - You can also use environment variable such as `GCLOUD_KEYFILE`.
+- `topic` (optional)
+  - Set topic name to pull.
+- `subscription` (required)
+  - Set subscription name to pull.
+- `max_messages` (optional, default: `100`)
+  - See maxMessages on https://cloud.google.com/pubsub/subscriber#receiving-pull-messages
+- `return_immediately` (optional, default: `true`)
+  - See returnImmediately on https://cloud.google.com/pubsub/subscriber#receiving-pull-messages
+  - If `return_immediately` is `true`, this plugin ignore `pull_interval`.
+- `pull_interval` (optional, default: `5`)
+  - Pulling messages by intervals of specified seconds.
