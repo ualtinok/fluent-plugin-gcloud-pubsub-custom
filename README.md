@@ -1,7 +1,9 @@
-# fluent-plugin-gcloud-pubsub
+# fluent-plugin-gcloud-pubsub-custom
 
-[![Build Status](https://travis-ci.org/mdoi/fluent-plugin-gcloud-pubsub.svg?branch=master)](https://travis-ci.org/mdoi/fluent-plugin-gcloud-pubsub)
-[![Gem Version](https://badge.fury.io/rb/fluent-plugin-gcloud-pubsub.svg)](http://badge.fury.io/rb/fluent-plugin-gcloud-pubsub)
+[![Build Status](https://travis-ci.org/mia-0032/fluent-plugin-gcloud-pubsub-custom.svg?branch=master)](https://travis-ci.org/mia-0032/fluent-plugin-gcloud-pubsub-custom)
+[![Gem Version](https://badge.fury.io/rb/fluent-plugin-gcloud-pubsub-custom.svg)](http://badge.fury.io/rb/fluent-plugin-gcloud-pubsub-custom)
+
+This plugin is forked from https://github.com/mdoi/fluent-plugin-gcloud-pubsub
 
 ## Overview
 
@@ -14,15 +16,22 @@
 
 - Create a project on Google Developer Console
 - Add a topic of Cloud Pub/Sub to the project
-  - If you use `out_gcloud_pubsub` and specify `autocreate_topic true`, you don't have to create the topic.
 - Add a pull style subscription to the topic
 - Download your credential (json) or [set scope on GCE instance](https://cloud.google.com/compute/docs/api/how-tos/authorization)
+
+## Installation
+
+Install by gem:
+
+```shell
+$ gem install fluent-plugin-gcloud-pubsub-custom
+```
 
 ## Configuration
 
 ### Publish messages
 
-Use `out_gcloud_pubsub`.
+Use `gcloud_pubsub` output plugin.
 
 ```
 <match example.publish>
@@ -66,7 +75,7 @@ Use `out_gcloud_pubsub`.
 
 ### Pull messages
 
-Use `in_gcloud_pubsub`.
+Use `gcloud_pubsub` input plugin.
 
 ```
 <source>
@@ -106,3 +115,21 @@ Use `in_gcloud_pubsub`.
   - Pulling messages by intervals of specified seconds.
 - `format` (optional, default: `json`)
   - Set input format. See format section in http://docs.fluentd.org/articles/in_tail
+
+## Contributing
+
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create a new Pull Request
+
+## TODO
+
+- Add `tag` attribute in output plugin and use `tag` attribute as tag in input plugin.
+- Send ack after other output plugin committed (if possible).
+
+## Authors
+
+- [@mdoi](https://github.com/mdoi) : First author
+- [@mia-0032](https://github.com/mia-0032) : This version author

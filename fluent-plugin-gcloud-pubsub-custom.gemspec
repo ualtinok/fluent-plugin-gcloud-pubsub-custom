@@ -2,14 +2,14 @@
 $:.push File.expand_path('../lib', __FILE__)
 
 Gem::Specification.new do |gem|
-  gem.name        = "fluent-plugin-gcloud-pubsub"
+  gem.name        = "fluent-plugin-gcloud-pubsub-custom"
   gem.description = "Google Cloud Pub/Sub input/output plugin for Fluentd event collector"
   gem.license     = "MIT"
-  gem.homepage    = "https://github.com/mdoi/fluent-plugin-gcloud-pubsub"
+  gem.homepage    = "https://github.com/mia-0032/fluent-plugin-gcloud-pubsub-custom"
   gem.summary     = gem.description
   gem.version     = "0.0.5"
-  gem.authors     = ["Masayuki DOI"]
-  gem.email       = "dotquasar@gmail.com"
+  gem.authors     = ["Yoshihiro MIYAI"]
+  gem.email       = "msparrow17@gmail.com"
   gem.has_rdoc    = false
   gem.files       = `git ls-files`.split("\n")
   gem.test_files  = `git ls-files -- {test,spec,features}/*`.split("\n")
