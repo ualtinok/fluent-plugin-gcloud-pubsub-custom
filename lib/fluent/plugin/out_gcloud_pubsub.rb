@@ -1,14 +1,15 @@
-require 'gcloud'
 require 'fluent/output'
 require 'yajl'
+
+require 'fluent/plugin/gcloud_pubsub/client'
 
 module Fluent
   class GcloudPubSubOutput < BufferedOutput
     Fluent::Plugin.register_output('gcloud_pubsub', self)
 
     config_param :project,            :string,  :default => nil
-    config_param :topic,              :string,  :default => nil
     config_param :key,                :string,  :default => nil
+    config_param :topic,              :string
     config_param :autocreate_topic,   :bool,    :default => false
     config_param :max_messages,       :integer, :default => 1000
     config_param :max_total_size,     :integer, :default => 10000000  # 10MB
@@ -23,15 +24,12 @@ module Fluent
 
     def configure(conf)
       super
-
-      raise Fluent::ConfigError, "'topic' must be specified." unless @topic
     end
 
     def start
       super
-
-      pubsub = (Gcloud.new @project, @key).pubsub
-      @client = pubsub.topic @topic, autocreate: @autocreate_topic
+      @publisher = Fluent::GcloudPubSub::Publisher.new @project, @key, @topic, @autocreate_topic
+      log.debug "connected topic:#{@topic} in project #{@project}"
     end
 
     def format(tag, time, record)
@@ -62,13 +60,10 @@ module Fluent
       raise e
     end
 
+    private
     def publish(messages)
-      log.debug "send message topic:#{@client.name} length:#{messages.length.to_s}"
-      @client.publish do |batch|
-        messages.each do |m|
-          batch.publish m
-        end
-      end
+      log.debug "send message topic:#{@topic} length:#{messages.length.to_s}"
+      @publisher.publish messages
     end
   end
 end

@@ -1,144 +1,134 @@
 require_relative "../test_helper"
 
-
 class GcloudPubSubOutputTest < Test::Unit::TestCase
-  DEFAULT_CONFIG = <<-EOC
-    type gcloud_pubsub
+  CONFIG = %[
     project project-test
     topic topic-test
     key key-test
-    flush_interval 1
-  EOC
+  ]
+
   ReRaisedError = Class.new(RuntimeError)
 
-  def setup
-    Fluent::Test.setup
-  end
-
-  def create_driver(conf)
+  def create_driver(conf = CONFIG)
     Fluent::Test::BufferedOutputTestDriver.new(Fluent::GcloudPubSubOutput).configure(conf)
   end
 
-  def test_configure
-    d = create_driver(<<-EOC)
-      type gcloud_pubsub
-      project project-test
-      topic topic-test
-      key key-test
-      flush_interval 1
-    EOC
-
-    assert_equal('project-test', d.instance.project)
-    assert_equal('topic-test', d.instance.topic)
-    assert_equal('key-test', d.instance.key)
-    assert_equal(false, d.instance.autocreate_topic)
-    assert_equal(1, d.instance.flush_interval)
-    assert_equal(1000, d.instance.max_messages)
+  setup do
+    Fluent::Test.setup
   end
 
-  def test_autocreate_topic
-    d = create_driver(<<-EOC)
-      type gcloud_pubsub
-      project project-test
-      topic topic-test
-      key key-test
-      flush_interval 1
-      autocreate_topic true
-    EOC
+  sub_test_case 'configure' do
+    test 'default values are configured' do
+      d = create_driver(%[
+        project project-test
+        topic topic-test
+        key key-test
+      ])
 
-    assert_equal(true, d.instance.autocreate_topic)
-
-    client = mock!
-    client.topic("topic-test", autocreate: true).once
-
-    gcloud_mock = mock!.pubsub { client }
-    stub(Gcloud).new { gcloud_mock }
-
-    d.instance.instance_variable_set(:@client, client)
-
-    d.run
-  end
-
-  def test_max_messages
-    d = create_driver(DEFAULT_CONFIG)
-
-    client = mock!
-    client.name.times(2) { 'topic-test' }
-    client.publish.times(2)
-
-    pubsub_mock = mock!.topic(anything, anything) { client }
-    gcloud_mock = mock!.pubsub { pubsub_mock }
-    stub(Gcloud).new { gcloud_mock }
-
-    time = Time.parse("2016-07-09 11:12:13 UTC").to_i
-
-    # max_messages is default 1000
-    1001.times do |i|
-      d.emit({"a" => i}, time)
+      assert_equal('project-test', d.instance.project)
+      assert_equal('topic-test', d.instance.topic)
+      assert_equal('key-test', d.instance.key)
+      assert_equal(false, d.instance.autocreate_topic)
+      assert_equal(1000, d.instance.max_messages)
+      assert_equal(10000000, d.instance.max_total_size)
     end
 
-    d.run
-  end
-
-  def test_max_total_size
-    d = create_driver(<<-EOC)
-      type gcloud_pubsub
-      project project-test
-      topic topic-test
-      key key-test
-      flush_interval 1
-      max_messages 100000
-      max_total_size 1000
-    EOC
-
-    client = mock!
-    client.name.times(2) { 'topic-test' }
-    client.publish.times(2)
-
-    pubsub_mock = mock!.topic(anything, anything) { client }
-    gcloud_mock = mock!.pubsub { pubsub_mock }
-    stub(Gcloud).new { gcloud_mock }
-
-    time = Time.parse("2016-07-09 11:12:13 UTC").to_i
-
-    4.times do
-      d.emit({"a" => "a" * 400}, time)
+    test '"topic" must be specified' do
+      assert_raises Fluent::ConfigError do
+        create_driver(%[
+          project project-test
+          key key-test
+        ])
+      end
     end
 
-    d.run
+    test '"autocreate_topic" can be specified' do
+      d = create_driver(%[
+        project project-test
+        topic topic-test
+        key key-test
+        autocreate_topic true
+      ])
+
+      assert_equal(true, d.instance.autocreate_topic)
+    end
   end
 
-  def test_encoded_multibyte_strings
-    # on fluentd v0.14, all strings treated as "ASCII-8BIT" except specified encoding.
-    d = create_driver(DEFAULT_CONFIG)
+  sub_test_case 'topic' do
+    setup do
+      @publisher = mock!
+      @pubsub_mock = mock!
+      @gcloud_mock = mock!.pubsub { @pubsub_mock }
+      stub(Gcloud).new { @gcloud_mock }
+    end
 
-    client = mock!
-    client.name.once { 'topic-test' }
-    client.publish.once
+    test '"autocreate_topic" is enabled' do
+      d = create_driver(%[
+        project project-test
+        topic topic-test
+        key key-test
+        autocreate_topic true
+      ])
 
-    pubsub_mock = mock!.topic(anything, anything) { client }
-    gcloud_mock = mock!.pubsub { pubsub_mock }
-    stub(Gcloud).new { gcloud_mock }
-
-    time = Time.parse("2016-07-09 11:12:13 UTC").to_i
-
-    d.emit({"a" => "あああ".force_encoding("ASCII-8BIT")}, time)
-    d.run
+      @pubsub_mock.topic("topic-test", autocreate: true).once { @publisher }
+      d.run
+    end
   end
 
-  def test_re_raise_errors
-    d = create_driver(DEFAULT_CONFIG)
-    client = Object.new
-    def client.publish
-      raise ReRaisedError
+  sub_test_case 'publish' do
+    setup do
+      @publisher = mock!
+      @pubsub_mock = mock!.topic(anything, anything) { @publisher }
+      @gcloud_mock = mock!.pubsub { @pubsub_mock }
+      stub(Gcloud).new { @gcloud_mock }
     end
-    def client.name
-      'test-topic'
-    end
-    d.instance.instance_variable_set(:@client, client)
 
-    assert_raises ReRaisedError do
-      d.instance.publish([{'a' => 1, 'b' => 2}])
+    setup do
+      @time = Time.parse('2016-07-09 11:12:13 UTC').to_i
+    end
+
+    test 'messages are divided into "max_messages"' do
+      d = create_driver
+      @publisher.publish.times(2)
+      # max_messages is default 1000
+      1001.times do |i|
+        d.emit({"a" => i}, @time)
+      end
+      d.run
+    end
+
+    test 'messages are divided into "max_total_size"' do
+      d = create_driver(%[
+        project project-test
+        topic topic-test
+        key key-test
+        max_messages 100000
+        max_total_size 1000
+      ])
+
+      @publisher.publish.times(2)
+      # 400 * 4 / max_total_size = twice
+      4.times do
+        d.emit({"a" => "a" * 400}, @time)
+      end
+      d.run
+    end
+
+    test 'accept "ASCII-8BIT" encoded multibyte strings' do
+      # on fluentd v0.14, all strings treated as "ASCII-8BIT" except specified encoding.
+      d = create_driver
+      @publisher.publish.once
+      d.emit({"a" => "あああ".force_encoding("ASCII-8BIT")}, @time)
+      d.run
+    end
+
+    test 'reraise errors' do
+      d = create_driver
+      @publisher.publish.once { raise ReRaisedError }
+      assert_raises ReRaisedError do
+        d.emit([{'a' => 1, 'b' => 2}])
+        d.run
+      end
     end
   end
 end
