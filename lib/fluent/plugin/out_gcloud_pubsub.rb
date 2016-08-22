@@ -1,5 +1,4 @@
 require 'fluent/output'
-require 'yajl'
 
 require 'fluent/plugin/gcloud_pubsub/client'
 
@@ -13,6 +12,7 @@ module Fluent
     config_param :autocreate_topic,   :bool,    :default => false
     config_param :max_messages,       :integer, :default => 1000
     config_param :max_total_size,     :integer, :default => 10000000  # 10MB
+    config_param :format,             :string,  :default => 'json'
 
     unless method_defined?(:log)
       define_method("log") { $log }
@@ -24,6 +24,8 @@ module Fluent
 
     def configure(conf)
       super
+      @formatter = Plugin.new_formatter(@format)
+      @formatter.configure(conf)
     end
 
     def start
@@ -41,7 +43,7 @@ module Fluent
       size = 0
 
       chunk.msgpack_each do |tag, time, record|
-        msg = Yajl.dump(record)
+        msg = @formatter.format(tag, time, record)
         if messages.length + 1 > @max_messages || size + msg.bytesize > @max_total_size
           publish messages
           messages = []
@@ -61,6 +63,7 @@ module Fluent
     end
 
     private
+
     def publish(messages)
       log.debug "send message topic:#{@topic} length:#{messages.length.to_s}"
       @publisher.publish messages

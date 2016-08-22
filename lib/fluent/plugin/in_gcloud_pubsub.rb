@@ -15,6 +15,7 @@ module Fluent
     config_param :pull_interval,      :integer, :default => 5
     config_param :max_messages,       :integer, :default => 100
     config_param :return_immediately, :bool,    :default => true
+    config_param :format,             :string,  :default => 'json'
 
     unless method_defined?(:log)
       define_method("log") { $log }
@@ -26,7 +27,8 @@ module Fluent
 
     def configure(conf)
       super
-      configure_parser(conf)
+      @parser = Plugin.new_parser(@format)
+      @parser.configure(conf)
     end
 
     def start
@@ -44,10 +46,6 @@ module Fluent
     end
 
     private
-    def configure_parser(conf)
-      @parser = Fluent::TextParser.new
-      @parser.configure(conf)
-    end
 
     def subscribe
       until @stop_subscribing
