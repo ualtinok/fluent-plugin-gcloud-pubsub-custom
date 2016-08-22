@@ -9,7 +9,7 @@ module Fluent
         pubsub = (Gcloud.new project, key).pubsub
 
         @client = pubsub.topic topic, autocreate: autocreate_topic
-        raise Fluent::GcloudPubSub::Error "topic:#{topic} does not exist." if @client.nil?
+        raise Fluent::GcloudPubSub::Error.new "topic:#{topic} does not exist." if @client.nil?
       end
 
       def publish(messages)
@@ -25,15 +25,15 @@ module Fluent
       def initialize(project, key, topic, subscription)
         pubsub = (Gcloud.new project, key).pubsub
         @client = pubsub.subscription subscription
-        raise Fluent::GcloudPubSub::Error "subscription:#{subscription} does not exist." if @client.nil?
+        raise Fluent::GcloudPubSub::Error.new "subscription:#{subscription} does not exist." if @client.nil?
       end
 
       def pull(immediate, max)
-        @client.pull(immediate, max)
+        @client.pull immediate: immediate, max: max
       end
 
       def acknowledge(messages)
-        @client.acknowledge(messages)
+        @client.acknowledge messages
       end
     end
   end
