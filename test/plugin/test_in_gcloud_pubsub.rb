@@ -28,7 +28,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
         max_messages 1000
         return_immediately true
         pull_interval 2
-        format json
+        format ltsv
       ])
 
       assert_equal('test', d.instance.tag)
@@ -39,6 +39,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       assert_equal(2, d.instance.pull_interval)
       assert_equal(1000, d.instance.max_messages)
       assert_equal(true, d.instance.return_immediately)
+      assert_equal('ltsv', d.instance.format)
     end
 
     test 'default values are configured' do
@@ -47,6 +48,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       assert_equal(5, d.instance.pull_interval)
       assert_equal(100, d.instance.max_messages)
       assert_equal(true, d.instance.return_immediately)
+      assert_equal('json', d.instance.format)
     end
   end
 end

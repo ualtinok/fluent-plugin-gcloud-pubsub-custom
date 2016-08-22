@@ -37,6 +37,7 @@ Use `out_gcloud_pubsub`.
   buffer_path /path/to/your/buffer
   flush_interval 1s
   try_flush_interval 0.1
+  format json
 </match>
 ```
 
@@ -60,6 +61,8 @@ Use `out_gcloud_pubsub`.
     - See https://cloud.google.com/pubsub/quotas#other_limits
 - `buffer_type`, `buffer_path`, `flush_interval`, `try_flush_interval`
   - These are fluentd buffer configuration. See http://docs.fluentd.org/articles/buffer-plugin-overview
+- `format` (optional, default: `json`)
+  - Set output format. See http://docs.fluentd.org/articles/out_file#format
 
 ### Pull messages
 
@@ -101,3 +104,5 @@ Use `in_gcloud_pubsub`.
   - If `return_immediately` is `true`, this plugin ignore `pull_interval`.
 - `pull_interval` (optional, default: `5`)
   - Pulling messages by intervals of specified seconds.
+- `format` (optional, default: `json`)
+  - Set input format. See format section in http://docs.fluentd.org/articles/in_tail
