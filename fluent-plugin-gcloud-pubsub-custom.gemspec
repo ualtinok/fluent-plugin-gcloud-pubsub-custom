@@ -17,7 +17,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ['lib']
 
   gem.add_runtime_dependency "fluentd", [">= 0.10.58", "< 2"]
-  gem.add_runtime_dependency "gcloud", "~> 0.12"
+  gem.add_runtime_dependency "google-cloud-pubsub", "~> 0.20.0"
 
   gem.add_development_dependency "bundler"
   gem.add_development_dependency "rake"

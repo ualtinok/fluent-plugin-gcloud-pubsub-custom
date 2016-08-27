@@ -82,7 +82,7 @@ module Fluent
     end
 
     def convert_line_to_event(line, es)
-      line.chomp!  # remove \n
+      line = line.chomp  # remove \n
       @parser.parse(line) { |time, record|
         if time && record
           es.add(time, record)
