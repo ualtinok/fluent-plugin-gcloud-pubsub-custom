@@ -1,4 +1,4 @@
-require 'gcloud'
+require 'google/cloud'
 
 module Fluent
   module GcloudPubSub
@@ -6,7 +6,7 @@ module Fluent
 
     class Publisher
       def initialize(project, key, topic, autocreate_topic)
-        pubsub = (Gcloud.new project, key).pubsub
+        pubsub = (Google::Cloud.new project, key).pubsub
 
         @client = pubsub.topic topic, autocreate: autocreate_topic
         raise Fluent::GcloudPubSub::Error.new "topic:#{topic} does not exist." if @client.nil?
@@ -23,8 +23,9 @@ module Fluent
 
     class Subscriber
       def initialize(project, key, topic, subscription)
-        pubsub = (Gcloud.new project, key).pubsub
-        @client = pubsub.subscription subscription
+        pubsub = (Google::Cloud.new project, key).pubsub
+        topic = pubsub.topic topic
+        @client = topic.subscription subscription
         raise Fluent::GcloudPubSub::Error.new "subscription:#{subscription} does not exist." if @client.nil?
       end
 

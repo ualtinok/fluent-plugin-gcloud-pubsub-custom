@@ -59,7 +59,7 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
       @publisher = mock!
       @pubsub_mock = mock!
       @gcloud_mock = mock!.pubsub { @pubsub_mock }
-      stub(Gcloud).new { @gcloud_mock }
+      stub(Google::Cloud).new { @gcloud_mock }
     end
 
     test '"autocreate_topic" is enabled' do
@@ -80,7 +80,7 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
       @publisher = mock!
       @pubsub_mock = mock!.topic(anything, anything) { @publisher }
       @gcloud_mock = mock!.pubsub { @pubsub_mock }
-      stub(Gcloud).new { @gcloud_mock }
+      stub(Google::Cloud).new { @gcloud_mock }
     end
 
     setup do
