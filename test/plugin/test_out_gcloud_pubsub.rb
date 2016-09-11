@@ -30,7 +30,7 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
       assert_equal('key-test', d.instance.key)
       assert_equal(false, d.instance.autocreate_topic)
       assert_equal(1000, d.instance.max_messages)
-      assert_equal(10000000, d.instance.max_total_size)
+      assert_equal(9800000, d.instance.max_total_size)
     end
 
     test '"topic" must be specified' do

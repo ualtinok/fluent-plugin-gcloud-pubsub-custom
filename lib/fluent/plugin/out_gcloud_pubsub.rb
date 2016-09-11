@@ -11,7 +11,7 @@ module Fluent
     config_param :topic,              :string
     config_param :autocreate_topic,   :bool,    :default => false
     config_param :max_messages,       :integer, :default => 1000
-    config_param :max_total_size,     :integer, :default => 10000000  # 10MB
+    config_param :max_total_size,     :integer, :default => 9800000  # 9.8MB
     config_param :format,             :string,  :default => 'json'
 
     unless method_defined?(:log)
@@ -65,7 +65,7 @@ module Fluent
     private
 
     def publish(messages)
-      log.debug "send message topic:#{@topic} length:#{messages.length.to_s}"
+      log.debug "send message topic:#{@topic} length:#{messages.length} size:#{messages.map(&:bytesize).inject(:+)}"
       @publisher.publish messages
     end
   end
