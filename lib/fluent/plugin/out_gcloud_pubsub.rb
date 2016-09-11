@@ -65,7 +65,7 @@ module Fluent
     private
 
     def publish(messages)
-      log.debug "send message topic:#{@topic} length:#{messages.length.to_s}"
+      log.debug "send message topic:#{@topic} length:#{messages.length} size:#{messages.map(&:bytesize).inject(:+)}"
       @publisher.publish messages
     end
   end
