@@ -65,8 +65,8 @@ Use `gcloud_pubsub` output plugin.
 - `max_messages` (optional, default: `1000`)
   - Publishing messages count per request to Cloud Pub/Sub.
     - See https://cloud.google.com/pubsub/quotas#other_limits
-- `max_total_size` (optional, default: `10000000` = `10MB`)
-  - Publishing messages bytesize per request to Cloud Pub/Sub.
+- `max_total_size` (optional, default: `9800000` = `9.8MB`)
+  - Publishing messages bytesize per request to Cloud Pub/Sub. This parameter affects only message size. You should specify a little smaller value than quota.
     - See https://cloud.google.com/pubsub/quotas#other_limits
 - `buffer_type`, `buffer_path`, `flush_interval`, `try_flush_interval`
   - These are fluentd buffer configuration. See http://docs.fluentd.org/articles/buffer-plugin-overview
