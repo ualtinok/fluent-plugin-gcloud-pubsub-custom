@@ -49,27 +49,34 @@ module Fluent
 
     def subscribe
       until @stop_subscribing
-        messages = @subscriber.pull @return_immediately, @max_messages
-
-        if messages.length > 0
-          es = parse_messages(messages)
-          unless es.empty?
-            begin
-              router.emit_stream(@tag, es)
-            rescue
-              # ignore errors. Engine shows logs and backtraces.
-            end
-            @subscriber.acknowledge messages
-            log.debug "#{messages.length} message(s) processed"
-          end
-        end
+        _subscribe
 
         if @return_immediately
           sleep @pull_interval
         end
       end
     rescue
-      log.error "unexpected error", :error=>$!.to_s
+      log.error "unexpected error", message: $!.to_s, error_class: $!.class.to_s
+      log.error_backtrace
+    end
+
+    def _subscribe
+      messages = @subscriber.pull @return_immediately, @max_messages
+
+      if messages.length > 0
+        es = parse_messages(messages)
+        unless es.empty?
+          begin
+            router.emit_stream(@tag, es)
+          rescue
+            # ignore errors. Engine shows logs and backtraces.
+          end
+          @subscriber.acknowledge messages
+          log.debug "#{messages.length} message(s) processed"
+        end
+      end
+    rescue
+      log.error "unexpected error", message: $!.to_s, error_class: $!.class.to_s
       log.error_backtrace
     end
 
