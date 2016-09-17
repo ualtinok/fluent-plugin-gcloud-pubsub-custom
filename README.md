@@ -41,7 +41,7 @@ Use `gcloud_pubsub` output plugin.
   topic <YOUR TOPIC>
   autocreate_topic false
   max_messages 1000
-  max_total_size 10000000
+  max_total_size 9800000
   buffer_type file
   buffer_path /path/to/your/buffer
   flush_interval 1s
@@ -110,21 +110,11 @@ Use `gcloud_pubsub` input plugin.
   - See maxMessages on https://cloud.google.com/pubsub/subscriber#receiving-pull-messages
 - `return_immediately` (optional, default: `true`)
   - See returnImmediately on https://cloud.google.com/pubsub/subscriber#receiving-pull-messages
-  - If `return_immediately` is `true`, this plugin ignore `pull_interval`.
+  - If `return_immediately` is `false`, this plugin ignore `pull_interval`.
 - `pull_interval` (optional, default: `5`)
   - Pulling messages by intervals of specified seconds.
 - `format` (optional, default: `json`)
   - Set input format. See format section in http://docs.fluentd.org/articles/in_tail
-
-## ChangeLog
-
-- Release 0.1.1 - 2016/08/27
-  - Bump up google-cloud-pubsub (gcloud-ruby) to 0.20
-- Release 0.1.0 - 2016/08/22
-  - Use formatter / parser plugin and add format configuration
-  - Bump up gcloud-ruby to 0.12
-  - Remove dependency on lightening buffer
-  - Fix error caused by Pub/Sub quotas
 
 ## Contributing
 
