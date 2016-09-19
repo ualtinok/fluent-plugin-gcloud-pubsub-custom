@@ -87,7 +87,7 @@ Use `gcloud_pubsub` input plugin.
   subscription <YOUR SUBSCRIPTION>
   max_messages 1000
   return_immediately true
-  pull_interval 2
+  pull_interval 0.5
   format json
 </source>
 ```
@@ -102,7 +102,7 @@ Use `gcloud_pubsub` input plugin.
   - Set your credential file path.
   - Running fluentd on GCP, you can use scope instead of specifying this.
   - You can also use environment variable such as `GCLOUD_KEYFILE`.
-- `topic` (optional)
+- `topic` (required)
   - Set topic name to pull.
 - `subscription` (required)
   - Set subscription name to pull.
@@ -111,7 +111,7 @@ Use `gcloud_pubsub` input plugin.
 - `return_immediately` (optional, default: `true`)
   - See returnImmediately on https://cloud.google.com/pubsub/subscriber#receiving-pull-messages
   - If `return_immediately` is `false`, this plugin ignore `pull_interval`.
-- `pull_interval` (optional, default: `5`)
+- `pull_interval` (optional, default: `5.0`)
   - Pulling messages by intervals of specified seconds.
 - `format` (optional, default: `json`)
   - Set input format. See format section in http://docs.fluentd.org/articles/in_tail

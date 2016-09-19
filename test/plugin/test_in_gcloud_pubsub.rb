@@ -37,7 +37,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       assert_equal('topic-test', d.instance.topic)
       assert_equal('subscription-test', d.instance.subscription)
       assert_equal('key-test', d.instance.key)
-      assert_equal(2, d.instance.pull_interval)
+      assert_equal(2.0, d.instance.pull_interval)
       assert_equal(1000, d.instance.max_messages)
       assert_equal(true, d.instance.return_immediately)
       assert_equal('ltsv', d.instance.format)
@@ -45,7 +45,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
 
     test 'default values are configured' do
       d = create_driver
-      assert_equal(5, d.instance.pull_interval)
+      assert_equal(5.0, d.instance.pull_interval)
       assert_equal(100, d.instance.max_messages)
       assert_equal(true, d.instance.return_immediately)
       assert_equal('json', d.instance.format)
@@ -131,11 +131,12 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       @subscriber.pull(immediate: true, max: 100).twice { raise UnknownError.new('test') }
       @subscriber.acknowledge.times(0)
 
-      d = create_driver(CONFIG + 'pull_interval 1')
+      d = create_driver(CONFIG + 'pull_interval 0.5')
       d.run {
-        sleep 1 # + 0.5s
+        sleep 0.1 # + 0.5s
       }
 
+      assert_equal(0.5, d.instance.pull_interval)
       assert_equal(true, d.emits.empty?)
     end
   end

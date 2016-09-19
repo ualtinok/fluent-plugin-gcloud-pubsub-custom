@@ -1,9 +1,15 @@
 ## ChangeLog
 
+- Release 0.1.4 - 2016/09/19
+  - Input plugin
+    - `pull_interval` can be specified float value
+    - `topic` must be specified
 - Release 0.1.3 - 2016/09/17
-  - Fix error handling and add debug logging in input plugin
+  - Input plugin
+    - Fix error handling and add debug logging
 - Release 0.1.2 - 2016/09/11
-  - Change default max message size and add debug message
+  - Output plugin
+    - Change default max message size and add debug message
 - Release 0.1.1 - 2016/08/27
   - Bump up google-cloud-pubsub (gcloud-ruby) to 0.20
 - Release 0.1.0 - 2016/08/22
