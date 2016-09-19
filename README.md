@@ -102,7 +102,7 @@ Use `gcloud_pubsub` input plugin.
   - Set your credential file path.
   - Running fluentd on GCP, you can use scope instead of specifying this.
   - You can also use environment variable such as `GCLOUD_KEYFILE`.
-- `topic` (optional)
+- `topic` (required)
   - Set topic name to pull.
 - `subscription` (required)
   - Set subscription name to pull.

@@ -10,7 +10,7 @@ module Fluent
     config_param :tag,                :string
     config_param :project,            :string,  :default => nil
     config_param :key,                :string,  :default => nil
-    config_param :topic,              :string,  :default => nil
+    config_param :topic,              :string
     config_param :subscription,       :string
     config_param :pull_interval,      :float,   :default => 5.0
     config_param :max_messages,       :integer, :default => 100
