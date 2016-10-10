@@ -1,3 +1,5 @@
+require 'net/http'
+
 require_relative "../test_helper"
 
 class GcloudPubSubInputTest < Test::Unit::TestCase
@@ -10,8 +12,17 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       format json
   ]
 
+  DEFAULT_HOST = '127.0.0.1'
+  DEFAULT_PORT = 24680
+
   def create_driver(conf=CONFIG)
     Fluent::Test::InputTestDriver.new(Fluent::GcloudPubSubInput).configure(conf)
+  end
+
+  def http_get(path)
+    http = Net::HTTP.new(DEFAULT_HOST, DEFAULT_PORT)
+    req = Net::HTTP::Get.new(path, {'Content-Type' => 'application/x-www-form-urlencoded'})
+    http.request(req)
   end
 
   setup do
@@ -30,6 +41,9 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
         return_immediately true
         pull_interval 2
         format ltsv
+        enable_rpc true
+        rpc_bind 127.0.0.1
+        rpc_port 24681
       ])
 
       assert_equal('test', d.instance.tag)
@@ -41,6 +55,9 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       assert_equal(1000, d.instance.max_messages)
       assert_equal(true, d.instance.return_immediately)
       assert_equal('ltsv', d.instance.format)
+      assert_equal(true, d.instance.enable_rpc)
+      assert_equal('127.0.0.1', d.instance.rpc_bind)
+      assert_equal(24681, d.instance.rpc_port)
     end
 
     test 'default values are configured' do
@@ -49,6 +66,9 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       assert_equal(100, d.instance.max_messages)
       assert_equal(true, d.instance.return_immediately)
       assert_equal('json', d.instance.format)
+      assert_equal(false, d.instance.enable_rpc)
+      assert_equal('0.0.0.0', d.instance.rpc_bind)
+      assert_equal(24680, d.instance.rpc_port)
     end
   end
 
@@ -138,6 +158,55 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
 
       assert_equal(0.5, d.instance.pull_interval)
       assert_equal(true, d.emits.empty?)
+    end
+
+    test 'stop by http rpc' do
+      messages = Array.new(1, DummyMessage.new)
+      @subscriber.pull(immediate: true, max: 100).once { messages }
+      @subscriber.acknowledge(messages).once
+
+      d = create_driver("#{CONFIG}\npull_interval 1.0\nenable_rpc true")
+      assert_equal(false, d.instance.instance_variable_get(:@stop_pull))
+
+      d.run {
+        http_get('/api/in_gcloud_pubsub/pull/stop')
+        sleep 0.75
+        # d.run sleeps 0.5 sec
+      }
+      emits = d.emits
+
+      assert_equal(1, emits.length)
+      assert_equal(true, d.instance.instance_variable_get(:@stop_pull))
+
+      emits.each do |tag, time, record|
+        assert_equal("test", tag)
+        assert_equal({"foo" => "bar"}, record)
+      end
+    end
+
+    test 'start by http rpc' do
+      messages = Array.new(1, DummyMessage.new)
+      @subscriber.pull(immediate: true, max: 100).at_least(1) { messages }
+      @subscriber.acknowledge(messages).at_least(1)
+
+      d = create_driver("#{CONFIG}\npull_interval 1.0\nenable_rpc true")
+      d.instance.stop_pull
+      assert_equal(true, d.instance.instance_variable_get(:@stop_pull))
+
+      d.run {
+        http_get('/api/in_gcloud_pubsub/pull/start')
+        sleep 0.75
+        # d.run sleeps 0.5 sec
+      }
+      emits = d.emits
+
+      assert_equal(true, emits.length > 0)
+      assert_equal(false, d.instance.instance_variable_get(:@stop_pull))
+
+      emits.each do |tag, time, record|
+        assert_equal("test", tag)
+        assert_equal({"foo" => "bar"}, record)
+      end
     end
   end
 end
