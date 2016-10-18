@@ -1,5 +1,8 @@
 ## ChangeLog
 
+- Release 0.2.0 - 2016/10/15
+  - Input plugin
+    - Add HTTP RPC feature
 - Release 0.1.4 - 2016/09/19
   - Input plugin
     - `pull_interval` can be specified float value
