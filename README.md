@@ -89,6 +89,9 @@ Use `gcloud_pubsub` input plugin.
   return_immediately true
   pull_interval 0.5
   format json
+  enable_rpc true
+  rpc_bind 0.0.0.0
+  rpc_port 24680
 </source>
 ```
 
@@ -110,11 +113,17 @@ Use `gcloud_pubsub` input plugin.
   - See maxMessages on https://cloud.google.com/pubsub/subscriber#receiving-pull-messages
 - `return_immediately` (optional, default: `true`)
   - See returnImmediately on https://cloud.google.com/pubsub/subscriber#receiving-pull-messages
-  - If `return_immediately` is `false`, this plugin ignore `pull_interval`.
+  - If `return_immediately` is `true` and pulling message is stopped by HTTP RPC, this plugin wait `pull_interval` each pull.
 - `pull_interval` (optional, default: `5.0`)
   - Pulling messages by intervals of specified seconds.
 - `format` (optional, default: `json`)
   - Set input format. See format section in http://docs.fluentd.org/articles/in_tail
+- `enable_rpc` (optional, default: `false`)
+  - If `true` is specified, HTTP RPC to stop or start pulling message is enabled.
+- `rpc_bind` (optional, default: `0.0.0.0`)
+  - Bind IP address for HTTP RPC.
+- `rpc_port` (optional, default: `24680`)
+  - Port for HTTP RPC.
 
 ## Contributing
 
