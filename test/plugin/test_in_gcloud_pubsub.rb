@@ -88,8 +88,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       @subscriber = mock!
       @topic_mock = mock!.subscription('subscription-test') { @subscriber }
       @pubsub_mock = mock!.topic('topic-test') { @topic_mock }
-      @gcloud_mock = mock!.pubsub { @pubsub_mock }
-      stub(Google::Cloud).new { @gcloud_mock }
+      stub(Google::Cloud::Pubsub).new { @pubsub_mock }
     end
 
     test 'empty' do
