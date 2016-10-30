@@ -18,6 +18,7 @@ module Fluent
     config_param :pull_interval,      :float,   default: 5.0
     config_param :max_messages,       :integer, default: 100
     config_param :return_immediately, :bool,    default: true
+    config_param :pull_threads,       :integer, default: 1
     config_param :format,             :string,  default: 'json'
     # for HTTP RPC
     config_param :enable_rpc,         :bool,    default: false
@@ -94,7 +95,10 @@ module Fluent
       log.debug "connected subscription:#{@subscription} in project #{@project}"
 
       @stop_subscribing = false
-      @subscribe_thread = Thread.new(&method(:subscribe))
+      @subscribe_threads = []
+      @pull_threads.times do
+        @subscribe_threads.push Thread.new(&method(:subscribe))
+      end
     end
 
     def shutdown
@@ -108,7 +112,7 @@ module Fluent
         @rpc_thread = nil
       end
       @stop_subscribing = true
-      @subscribe_thread.join
+      @subscribe_threads.each(&:join)
     end
 
     def stop_pull

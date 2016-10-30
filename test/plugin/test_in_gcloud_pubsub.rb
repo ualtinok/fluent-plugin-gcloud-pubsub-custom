@@ -40,6 +40,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
         max_messages 1000
         return_immediately true
         pull_interval 2
+        pull_threads 3
         format ltsv
         enable_rpc true
         rpc_bind 127.0.0.1
@@ -54,6 +55,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       assert_equal(2.0, d.instance.pull_interval)
       assert_equal(1000, d.instance.max_messages)
       assert_equal(true, d.instance.return_immediately)
+      assert_equal(3, d.instance.pull_threads)
       assert_equal('ltsv', d.instance.format)
       assert_equal(true, d.instance.enable_rpc)
       assert_equal('127.0.0.1', d.instance.rpc_bind)
@@ -65,6 +67,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       assert_equal(5.0, d.instance.pull_interval)
       assert_equal(100, d.instance.max_messages)
       assert_equal(true, d.instance.return_immediately)
+      assert_equal(1, d.instance.pull_threads)
       assert_equal('json', d.instance.format)
       assert_equal(false, d.instance.enable_rpc)
       assert_equal('0.0.0.0', d.instance.rpc_bind)
@@ -115,6 +118,24 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       emits = d.emits
 
       assert_equal(1, emits.length)
+      emits.each do |tag, time, record|
+        assert_equal("test", tag)
+        assert_equal({"foo" => "bar"}, record)
+      end
+    end
+
+    test 'multithread' do
+      messages = Array.new(1, DummyMessage.new)
+      @subscriber.pull(immediate: true, max: 100).twice { messages }
+      @subscriber.acknowledge(messages).twice
+
+      d = create_driver("#{CONFIG}\npull_threads 2")
+      d.run {
+        # d.run sleeps 0.5 sec
+      }
+      emits = d.emits
+
+      assert_equal(2, emits.length)
       emits.each do |tag, time, record|
         assert_equal("test", tag)
         assert_equal({"foo" => "bar"}, record)
