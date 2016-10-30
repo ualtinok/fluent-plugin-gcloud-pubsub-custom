@@ -1,5 +1,9 @@
 ## ChangeLog
 
+- Release 0.3.0 - 2016/10/30
+  - Bump up google-cloud-pubsub to v0.21
+  - Input plugin
+    - Add multithreaded pulling feature
 - Release 0.2.0 - 2016/10/15
   - Input plugin
     - Add HTTP RPC feature
