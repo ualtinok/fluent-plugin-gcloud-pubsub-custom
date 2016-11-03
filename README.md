@@ -27,6 +27,12 @@ Install by gem:
 $ gem install fluent-plugin-gcloud-pubsub-custom
 ```
 
+**Caution**
+
+This plugin doesn't work in [td-agent](http://docs.fluentd.org/articles/install-by-rpm).
+
+Please use in [Fluentd installed by gem](http://docs.fluentd.org/articles/install-by-gem).
+
 ## Configuration
 
 ### Publish messages
