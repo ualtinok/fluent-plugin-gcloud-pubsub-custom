@@ -55,10 +55,13 @@ module Fluent
       if messages.length > 0
         publish messages
       end
-    rescue => e
-      log.error "unexpected error", :error=>$!.to_s
+    rescue Fluent::GcloudPubSub::RetryableError => ex
+      log.warn "Retryable error occurs. Fluentd will retry.", error_message: ex.to_s, error_class: ex.class.to_s
+      raise ex
+    rescue => ex
+      log.error "unexpected error", error_message: ex.to_s, error_class: ex.class.to_s
       log.error_backtrace
-      raise e
+      raise ex
     end
 
     private
