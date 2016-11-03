@@ -3,7 +3,7 @@
 ### Release 0.3.1 - 2016/11/03
 
 - Output plugin
-- Improve error handling
+  - Improve error handling
 
 ### Release 0.3.0 - 2016/10/30
 
