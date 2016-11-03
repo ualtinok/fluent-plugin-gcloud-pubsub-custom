@@ -35,15 +35,14 @@ module Fluent
     end
 
     def format(tag, time, record)
-      [tag, time, record].to_msgpack
+      @formatter.format(tag, time, record).to_msgpack
     end
 
     def write(chunk)
       messages = []
       size = 0
 
-      chunk.msgpack_each do |tag, time, record|
-        msg = @formatter.format(tag, time, record)
+      chunk.msgpack_each do |msg|
         if messages.length + 1 > @max_messages || size + msg.bytesize > @max_total_size
           publish messages
           messages = []
