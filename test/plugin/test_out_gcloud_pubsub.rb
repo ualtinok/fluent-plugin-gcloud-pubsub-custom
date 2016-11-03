@@ -120,10 +120,19 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
       d.run
     end
 
-    test 'reraise errors' do
+    test 'reraise unexpected errors' do
       d = create_driver
       @publisher.publish.once { raise ReRaisedError }
       assert_raises ReRaisedError do
+        d.emit([{'a' => 1, 'b' => 2}])
+        d.run
+      end
+    end
+
+    test 'reraise RetryableError' do
+      d = create_driver
+      @publisher.publish.once { raise Google::Cloud::UnavailableError.new('TEST') }
+      assert_raises Fluent::GcloudPubSub::RetryableError do
         d.emit([{'a' => 1, 'b' => 2}])
         d.run
       end
