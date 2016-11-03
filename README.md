@@ -88,6 +88,7 @@ Use `gcloud_pubsub` input plugin.
   max_messages 1000
   return_immediately true
   pull_interval 0.5
+  pull_threads 2
   format json
   enable_rpc true
   rpc_bind 0.0.0.0
@@ -116,6 +117,8 @@ Use `gcloud_pubsub` input plugin.
   - If `return_immediately` is `true` and pulling message is stopped by HTTP RPC, this plugin wait `pull_interval` each pull.
 - `pull_interval` (optional, default: `5.0`)
   - Pulling messages by intervals of specified seconds.
+- `pull_threads` (optional, default: `1`)
+  - Set number of threads to pull messages.
 - `format` (optional, default: `json`)
   - Set input format. See format section in http://docs.fluentd.org/articles/in_tail
 - `enable_rpc` (optional, default: `false`)
