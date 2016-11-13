@@ -17,6 +17,9 @@ module Fluent
       end
     end
 
+    class FailedParseError < StandardError
+    end
+
     desc 'Set tag of messages.'
     config_param :tag,                :string
     desc 'Set your GCP project.'
@@ -183,44 +186,27 @@ module Fluent
         return
       end
 
-      es = parse_messages(messages)
-      if es.empty?
-        log.warn "#{messages.length} message(s) are pulled, but no messages are parsed"
-        return
-      end
-
-      begin
-        router.emit_stream(@tag, es)
-      rescue
-        # ignore errors. Engine shows logs and backtraces.
-      end
+      process messages
       @subscriber.acknowledge messages
+
       log.debug "#{messages.length} message(s) processed"
     rescue => ex
       log.error "unexpected error", error_message: ex.to_s, error_class: ex.class.to_s
       log.error_backtrace ex.backtrace
     end
 
-    def parse_messages(messages)
+    def process(messages)
       es = MultiEventStream.new
       messages.each do |m|
-        convert_line_to_event(m.message.data, es)
-      end
-      es
-    end
-
-    def convert_line_to_event(line, es)
-      line = line.chomp  # remove \n
-      @parser.parse(line) { |time, record|
-        if time && record
-          es.add(time, record)
-        else
-          log.warn "pattern not match: #{line.inspect}"
+        @parser.parse(m.message.data.chomp) do |time, record|
+          if time && record
+            es.add(time, record)
+          else
+            raise FailedParseError.new "pattern not match: #{line.inspect}"
+          end
         end
-      }
-    rescue => ex
-      log.warn line.dump, error_message: ex.to_s, error_class: ex.class.to_s
-      log.warn_backtrace ex.backtrace
+      end
+      router.emit_stream(@tag, es)
     end
   end
 end
