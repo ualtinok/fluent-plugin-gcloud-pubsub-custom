@@ -1,5 +1,11 @@
 ## ChangeLog
 
+### Release 0.3.2 - 2016/11/13
+
+- Add plugin param desc
+- Input plugin
+  - Improve handling to acknowledge messages
+
 ### Release 0.3.1 - 2016/11/03
 
 - Output plugin
