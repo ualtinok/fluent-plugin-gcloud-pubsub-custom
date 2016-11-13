@@ -10,20 +10,40 @@ module Fluent
   class GcloudPubSubInput < Input
     Fluent::Plugin.register_input('gcloud_pubsub', self)
 
+    class << self
+      unless method_defined?(:desc)
+        def desc(description)
+        end
+      end
+    end
+
+    desc 'Set tag of messages.'
     config_param :tag,                :string
+    desc 'Set your GCP project.'
     config_param :project,            :string,  default: nil
+    desc 'Set your credential file path.'
     config_param :key,                :string,  default: nil
+    desc 'Set topic name to pull.'
     config_param :topic,              :string
+    desc 'Set subscription name to pull.'
     config_param :subscription,       :string
+    desc 'Pulling messages by intervals of specified seconds.'
     config_param :pull_interval,      :float,   default: 5.0
+    desc 'Max messages pulling at once.'
     config_param :max_messages,       :integer, default: 100
+    desc 'Setting `true`, keepalive connection to wait for new messages.'
     config_param :return_immediately, :bool,    default: true
+    desc 'Set number of threads to pull messages.'
     config_param :pull_threads,       :integer, default: 1
+    desc 'Set input format.'
     config_param :format,             :string,  default: 'json'
     # for HTTP RPC
+    desc 'If `true` is specified, HTTP RPC to stop or start pulling message is enabled.'
     config_param :enable_rpc,         :bool,    default: false
-    config_param :rpc_bind,               :string,  default: '0.0.0.0'
-    config_param :rpc_port,               :integer, default: 24680
+    desc 'Bind IP address for HTTP RPC.'
+    config_param :rpc_bind,           :string,  default: '0.0.0.0'
+    desc 'Port for HTTP RPC.'
+    config_param :rpc_port,           :integer, default: 24680
 
     unless method_defined?(:log)
       define_method("log") { $log }

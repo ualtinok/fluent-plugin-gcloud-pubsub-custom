@@ -6,12 +6,26 @@ module Fluent
   class GcloudPubSubOutput < BufferedOutput
     Fluent::Plugin.register_output('gcloud_pubsub', self)
 
+    class << self
+      unless method_defined?(:desc)
+        def desc(description)
+        end
+      end
+    end
+
+    desc 'Set your GCP project.'
     config_param :project,            :string,  :default => nil
+    desc 'Set your credential file path.'
     config_param :key,                :string,  :default => nil
+    desc 'Set topic name to publish.'
     config_param :topic,              :string
+    desc "If set to `true`, specified topic will be created when it doesn't exist."
     config_param :autocreate_topic,   :bool,    :default => false
+    desc 'Publishing messages count per request to Cloud Pub/Sub.'
     config_param :max_messages,       :integer, :default => 1000
+    desc 'Publishing messages bytesize per request to Cloud Pub/Sub.'
     config_param :max_total_size,     :integer, :default => 9800000  # 9.8MB
+    desc 'Set output format.'
     config_param :format,             :string,  :default => 'json'
 
     unless method_defined?(:log)

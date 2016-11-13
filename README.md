@@ -57,7 +57,7 @@ Use `gcloud_pubsub` output plugin.
 ```
 
 - `project` (optional)
-  - Set your GCP project
+  - Set your GCP project.
   - Running fluentd on GCP, you don't have to specify.
   - You can also use environment variable such as `GCLOUD_PROJECT`.
 - `key` (optional)
