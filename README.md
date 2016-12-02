@@ -120,7 +120,7 @@ Use `gcloud_pubsub` input plugin.
   - See maxMessages on https://cloud.google.com/pubsub/subscriber#receiving-pull-messages
 - `return_immediately` (optional, default: `true`)
   - See returnImmediately on https://cloud.google.com/pubsub/subscriber#receiving-pull-messages
-  - If `return_immediately` is `true` and pulling message is stopped by HTTP RPC, this plugin wait `pull_interval` each pull.
+  - If `return_immediately` is `true` or pulling message is stopped by HTTP RPC, this plugin wait `pull_interval` each pull.
 - `pull_interval` (optional, default: `5.0`)
   - Pulling messages by intervals of specified seconds.
 - `pull_threads` (optional, default: `1`)
