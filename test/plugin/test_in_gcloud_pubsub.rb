@@ -10,6 +10,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       subscription subscription-test
       key key-test
       format json
+      json_parser yajl
   ]
 
   DEFAULT_HOST = '127.0.0.1'
