@@ -1,5 +1,10 @@
 ## ChangeLog
 
+### Release 0.3.3 - 2016/12/03
+
+- Input plugin
+  - Fix undefined variable error
+
 ### Release 0.3.2 - 2016/11/13
 
 - Add plugin param desc
