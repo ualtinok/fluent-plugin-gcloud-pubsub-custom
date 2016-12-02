@@ -198,7 +198,8 @@ module Fluent
     def process(messages)
       es = MultiEventStream.new
       messages.each do |m|
-        @parser.parse(m.message.data.chomp) do |time, record|
+        line = m.message.data.chomp
+        @parser.parse(line) do |time, record|
           if time && record
             es.add(time, record)
           else
