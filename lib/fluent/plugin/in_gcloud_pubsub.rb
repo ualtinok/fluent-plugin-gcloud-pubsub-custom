@@ -117,6 +117,7 @@ module Fluent
       @subscriber = Fluent::GcloudPubSub::Subscriber.new @project, @key, @topic, @subscription
       log.debug "connected subscription:#{@subscription} in project #{@project}"
 
+      @emit_guard = Mutex.new
       @stop_subscribing = false
       @subscribe_threads = []
       @pull_threads.times do
@@ -207,7 +208,12 @@ module Fluent
           end
         end
       end
-      router.emit_stream(@tag, es)
+
+      # There are some output plugins not to supposed to be called with multi-threading.
+      # Maybe remove in the future.
+      @emit_guard.synchronize do
+        router.emit_stream(@tag, es)
+      end
     end
   end
 end
