@@ -1,12 +1,11 @@
 language: ruby
 
 rvm:
-  - 2.0
   - 2.1
   - 2.2.5
-  - 2.3.1
+  - 2.3.3
+  - 2.4.0
   - ruby-head
-  - rbx
 
 gemfile:
  - Gemfile
@@ -23,8 +22,5 @@ sudo: false
 
 matrix:
   allow_failures:
+    - rvm: 2.4.0
     - rvm: ruby-head
-    - rvm: rbx
-  exclude:
-    - rvm: 2.0
-      gemfile: Gemfile
