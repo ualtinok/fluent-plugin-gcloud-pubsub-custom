@@ -21,7 +21,7 @@ module Fluent
             batch.publish m
           end
         end
-      rescue Google::Cloud::UnavailableError, Google::Cloud::DeadlineExceededError => ex
+      rescue Google::Cloud::UnavailableError, Google::Cloud::DeadlineExceededError, Google::Cloud::InternalError => ex
         raise RetryableError.new "Google api returns error:#{ex.class.to_s} message:#{ex.to_s}"
       end
     end
@@ -36,6 +36,8 @@ module Fluent
 
       def pull(immediate, max)
         @client.pull immediate: immediate, max: max
+      rescue Google::Cloud::UnavailableError, Google::Cloud::DeadlineExceededError, Google::Cloud::InternalError => ex
+        raise RetryableError.new "Google api returns error:#{ex.class.to_s} message:#{ex.to_s}"
       end
 
       def acknowledge(messages)

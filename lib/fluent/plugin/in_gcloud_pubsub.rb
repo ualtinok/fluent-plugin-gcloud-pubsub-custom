@@ -191,6 +191,8 @@ module Fluent
       @subscriber.acknowledge messages
 
       log.debug "#{messages.length} message(s) processed"
+    rescue Fluent::GcloudPubSub::RetryableError => ex
+      log.warn "Retryable error occurs. Fluentd will retry.", error_message: ex.to_s, error_class: ex.class.to_s
     rescue => ex
       log.error "unexpected error", error_message: ex.to_s, error_class: ex.class.to_s
       log.error_backtrace ex.backtrace
