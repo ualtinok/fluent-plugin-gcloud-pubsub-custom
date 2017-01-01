@@ -40,6 +40,8 @@ module Fluent
     config_param :pull_threads,       :integer, default: 1
     desc 'Set input format.'
     config_param :format,             :string,  default: 'json'
+    desc 'Set error type when parsing messages fails.'
+    config_param :parse_error_action, :enum,    default: :exception, list: [:exception, :warning]
     # for HTTP RPC
     desc 'If `true` is specified, HTTP RPC to stop or start pulling message is enabled.'
     config_param :enable_rpc,         :bool,    default: false
@@ -206,7 +208,12 @@ module Fluent
           if time && record
             es.add(time, record)
           else
-            raise FailedParseError.new "pattern not match: #{line.inspect}"
+            case @parse_error_action
+            when :exception
+              raise FailedParseError.new "pattern not match: #{line.inspect}"
+            else
+              log.warn 'pattern not match', record: line.inspect
+            end
           end
         end
       end

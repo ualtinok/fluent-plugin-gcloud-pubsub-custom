@@ -96,6 +96,7 @@ Use `gcloud_pubsub` input plugin.
   pull_interval 0.5
   pull_threads 2
   format json
+  parse_error_action exception
   enable_rpc true
   rpc_bind 0.0.0.0
   rpc_port 24680
@@ -127,6 +128,10 @@ Use `gcloud_pubsub` input plugin.
   - Set number of threads to pull messages.
 - `format` (optional, default: `json`)
   - Set input format. See format section in http://docs.fluentd.org/articles/in_tail
+- `parse_error_action` (optional, default: `exception`)
+  - Set error type when parsing messages fails.
+    - `exception`: Raise exception. Messages are not acknowledged.
+    - `warning`: Only logging as warning.
 - `enable_rpc` (optional, default: `false`)
   - If `true` is specified, HTTP RPC to stop or start pulling message is enabled.
 - `rpc_bind` (optional, default: `0.0.0.0`)

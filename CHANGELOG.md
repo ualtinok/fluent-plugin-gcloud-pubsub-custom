@@ -1,12 +1,13 @@
 ## ChangeLog
 
-### Release 0.3.4 - 2016/12/31
+### Release 0.3.4 - 2017/01/02
 
 - Output plugin
   - Rescue 50x errors
 - Input plugin
   - Guard emit to be called with multi-threading
   - Rescue 50x errors
+  - Enabled to select whether to raise an exception if message processing failed
 
 ### Release 0.3.3 - 2016/12/03
 

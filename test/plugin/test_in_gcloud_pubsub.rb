@@ -16,6 +16,17 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
   DEFAULT_HOST = '127.0.0.1'
   DEFAULT_PORT = 24680
 
+  class DummyInvalidMsgData
+    def data
+      return 'foo:bar'
+    end
+  end
+  class DummyInvalidMessage
+    def message
+      DummyInvalidMsgData.new
+    end
+  end
+
   def create_driver(conf=CONFIG)
     Fluent::Test::InputTestDriver.new(Fluent::GcloudPubSubInput).configure(conf)
   end
@@ -143,23 +154,24 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       end
     end
 
-    test 'invalid messages' do
-      class DummyInvalidMsgData
-        def data
-          return 'foo:bar'
-        end
-      end
-      class DummyInvalidMessage
-        def message
-          DummyInvalidMsgData.new
-        end
-      end
-
+    test 'invalid messages with parse_error_action exception ' do
       messages = Array.new(1, DummyInvalidMessage.new)
       @subscriber.pull(immediate: true, max: 100).once { messages }
       @subscriber.acknowledge.times(0)
 
       d = create_driver
+      d.run {
+        # d.run sleeps 0.5 sec
+      }
+      assert_equal(true, d.emits.empty?)
+    end
+
+    test 'invalid messages with parse_error_action warning' do
+      messages = Array.new(1, DummyInvalidMessage.new)
+      @subscriber.pull(immediate: true, max: 100).once { messages }
+      @subscriber.acknowledge(messages).once
+
+      d = create_driver("#{CONFIG}\nparse_error_action warning")
       d.run {
         # d.run sleeps 0.5 sec
       }
