@@ -7,10 +7,10 @@ This plugin is forked from https://github.com/mdoi/fluent-plugin-gcloud-pubsub
 
 ## Overview
 
-[Cloud Pub/Sub](https://cloud.google.com/pubsub/) Input/Output(BufferedOutput) plugin for [Fluentd](http://www.fluentd.org/) with [gcloud](https://googlecloudplatform.github.io/gcloud-ruby/) gem
+[Google Cloud Pub/Sub](https://cloud.google.com/pubsub/) Input/Output(BufferedOutput) plugin for [Fluentd](http://www.fluentd.org/) with [google-cloud](https://googlecloudplatform.github.io/google-cloud-ruby/) gem
 
-- [Publish](https://googlecloudplatform.github.io/gcloud-ruby/docs/v0.12.2/Gcloud/Pubsub/Topic.html#publish-instance_method) messages to Cloud Pub/Sub
-- [Pull](https://googlecloudplatform.github.io/gcloud-ruby/docs/v0.12.2/Gcloud/Pubsub/Subscription.html#pull-instance_method) messages from Cloud Pub/Sub
+- Publish messages to Google Cloud Pub/Sub
+- Pull messages from Google Cloud Pub/Sub
 
 ## Preparation
 

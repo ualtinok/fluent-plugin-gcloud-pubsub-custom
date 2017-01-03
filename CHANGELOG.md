@@ -1,6 +1,6 @@
 ## ChangeLog
 
-### Release 0.3.4 - 2017/01/02
+### Release 0.3.4 - 2017/01/03
 
 - Output plugin
   - Rescue 50x errors
