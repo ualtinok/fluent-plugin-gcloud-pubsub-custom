@@ -1,5 +1,10 @@
 ## ChangeLog
 
+### Release 0.4.0 - 2017/01/21
+
+- Input plugin
+  - Add feature to use record key as tag
+
 ### Release 0.3.4 - 2017/01/03
 
 - Output plugin
