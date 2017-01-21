@@ -22,6 +22,8 @@ module Fluent
 
     desc 'Set tag of messages.'
     config_param :tag,                :string
+    desc 'Set key to be used as tag.'
+    config_param :tag_key,            :string,  default: nil
     desc 'Set your GCP project.'
     config_param :project,            :string,  default: nil
     desc 'Set your credential file path.'
@@ -108,6 +110,12 @@ module Fluent
       @rpc_thread = nil
       @stop_pull = false
 
+      @extract_tag = if @tag_key.nil?
+                       method(:static_tag)
+                     else
+                       method(:dynamic_tag)
+                     end
+
       @parser = Plugin.new_parser(@format)
       @parser.configure(conf)
     end
@@ -152,6 +160,14 @@ module Fluent
     end
 
     private
+
+    def static_tag(record)
+      @tag
+    end
+
+    def dynamic_tag(record)
+      record.delete(@tag_key) || @tag
+    end
 
     def start_rpc
       log.info "listening http rpc server on http://#{@rpc_bind}:#{@rpc_port}/"
@@ -201,12 +217,15 @@ module Fluent
     end
 
     def process(messages)
-      es = MultiEventStream.new
+      event_streams = Hash.new do |hsh, key|
+        hsh[key] = MultiEventStream.new
+      end
+
       messages.each do |m|
         line = m.message.data.chomp
         @parser.parse(line) do |time, record|
           if time && record
-            es.add(time, record)
+            event_streams[@extract_tag.call(record)].add(time, record)
           else
             case @parse_error_action
             when :exception
@@ -218,10 +237,12 @@ module Fluent
         end
       end
 
-      # There are some output plugins not to supposed to be called with multi-threading.
-      # Maybe remove in the future.
-      @emit_guard.synchronize do
-        router.emit_stream(@tag, es)
+      event_streams.each do |tag, es|
+        # There are some output plugins not to supposed to be called with multi-threading.
+        # Maybe remove in the future.
+        @emit_guard.synchronize do
+          router.emit_stream(tag, es)
+        end
       end
     end
   end

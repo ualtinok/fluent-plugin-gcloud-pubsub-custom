@@ -105,6 +105,9 @@ Use `gcloud_pubsub` input plugin.
 
 - `tag` (required)
   - Set tag of messages.
+  - If `tag_key` is specified, `tag` is used as tag when record don't have specified key.
+- `tag_key` (optional)
+  - Set key to be used as tag.
 - `project` (optional)
   - Set your GCP project
   - Running fluentd on GCP, you don't have to specify.

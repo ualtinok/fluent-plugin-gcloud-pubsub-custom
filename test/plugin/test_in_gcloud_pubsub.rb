@@ -99,6 +99,23 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       end
     end
 
+    class DummyMsgDataWithTagKey
+      def initialize(tag)
+        @tag = tag
+      end
+      def data
+        return '{"foo": "bar", "test_tag_key": "' + @tag + '"}'
+      end
+    end
+    class DummyMessageWithTagKey
+      def initialize(tag)
+        @tag = tag
+      end
+      def message
+        DummyMsgDataWithTagKey.new @tag
+      end
+    end
+
     setup do
       @subscriber = mock!
       @topic_mock = mock!.subscription('subscription-test') { @subscriber }
@@ -150,6 +167,32 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       assert_equal(2, emits.length)
       emits.each do |tag, time, record|
         assert_equal("test", tag)
+        assert_equal({"foo" => "bar"}, record)
+      end
+    end
+
+    test 'with tag_key' do
+      messages = [
+        DummyMessageWithTagKey.new('tag1'),
+        DummyMessageWithTagKey.new('tag2'),
+        DummyMessage.new
+      ]
+      @subscriber.pull(immediate: true, max: 100).once { messages }
+      @subscriber.acknowledge(messages).once
+
+      d = create_driver("#{CONFIG}\ntag_key test_tag_key")
+      d.run {
+        # d.run sleeps 0.5 sec
+      }
+      emits = d.emits
+
+      assert_equal(3, emits.length)
+      # test tag
+      assert_equal("tag1", emits[0][0])
+      assert_equal("tag2", emits[1][0])
+      assert_equal("test", emits[2][0])
+      # test record
+      emits.each do |tag, time, record|
         assert_equal({"foo" => "bar"}, record)
       end
     end
