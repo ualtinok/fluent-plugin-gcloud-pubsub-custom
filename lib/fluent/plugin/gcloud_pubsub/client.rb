@@ -37,11 +37,13 @@ module Fluent
       def pull(immediate, max)
         @client.pull immediate: immediate, max: max
       rescue Google::Cloud::UnavailableError, Google::Cloud::DeadlineExceededError, Google::Cloud::InternalError => ex
-        raise RetryableError.new "Google api returns error:#{ex.class.to_s} message:#{ex.to_s}"
+        raise RetryableError.new "Google pull api returns error:#{ex.class.to_s} message:#{ex.to_s}"
       end
 
       def acknowledge(messages)
         @client.acknowledge messages
+      rescue Google::Cloud::UnavailableError, Google::Cloud::DeadlineExceededError, Google::Cloud::InternalError => ex
+        raise RetryableError.new "Google acknowledge api returns error:#{ex.class.to_s} message:#{ex.to_s}"
       end
     end
   end

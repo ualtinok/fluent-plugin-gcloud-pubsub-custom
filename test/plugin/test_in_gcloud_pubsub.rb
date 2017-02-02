@@ -236,17 +236,36 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       assert_equal(true, d.emits.empty?)
     end
 
-    test 'retry if raised RetryableError' do
+    test 'retry if raised RetryableError on pull' do
       @subscriber.pull(immediate: true, max: 100).twice { raise Google::Cloud::UnavailableError.new('TEST') }
       @subscriber.acknowledge.times(0)
 
-      d = create_driver(CONFIG + 'pull_interval 0.5')
+      d = create_driver("#{CONFIG}\npull_interval 0.5")
       d.run {
         sleep 0.1 # + 0.5s
       }
 
       assert_equal(0.5, d.instance.pull_interval)
       assert_equal(true, d.emits.empty?)
+    end
+
+    test 'retry if raised RetryableError on acknowledge' do
+      messages = Array.new(1, DummyMessage.new)
+      @subscriber.pull(immediate: true, max: 100).twice { messages }
+      @subscriber.acknowledge(messages).twice { raise Google::Cloud::UnavailableError.new('TEST') }
+
+      d = create_driver("#{CONFIG}\npull_interval 0.5")
+      d.run {
+        sleep 0.1 # + 0.5s
+      }
+      emits = d.emits
+
+      # not acknowledged, but already emitted to engine.
+      assert_equal(2, emits.length)
+      emits.each do |tag, time, record|
+        assert_equal("test", tag)
+        assert_equal({"foo" => "bar"}, record)
+      end
     end
 
     test 'stop by http rpc' do
