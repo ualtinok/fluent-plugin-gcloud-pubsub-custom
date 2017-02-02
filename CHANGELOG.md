@@ -1,5 +1,11 @@
 ## ChangeLog
 
+### Release 0.4.1 - 2017/02/02
+
+- Bump up google-cloud-pubsub to v0.22.x
+- Input plugin
+  - Rescue 50x errors on acknowledge api
+
 ### Release 0.4.0 - 2017/01/21
 
 - Input plugin
