@@ -1,5 +1,9 @@
 ## ChangeLog
 
+### Release 0.4.2 - 2017/02/03
+
+- Make retry to get topic/subscription when Pub/Sub API returns 50x code
+
 ### Release 0.4.1 - 2017/02/02
 
 - Bump up google-cloud-pubsub to v0.22.x
