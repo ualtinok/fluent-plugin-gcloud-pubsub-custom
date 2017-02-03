@@ -72,6 +72,40 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
       @pubsub_mock.topic("topic-test", autocreate: true).once { @publisher }
       d.run
     end
+
+    test '40x error occurred on connecting to Pub/Sub' do
+      d = create_driver
+
+      @pubsub_mock.topic('topic-test', autocreate: false).once do
+        raise Google::Cloud::NotFoundError.new('TEST')
+      end
+
+      assert_raise Google::Cloud::NotFoundError do
+        d.run {}
+      end
+    end
+
+    test '50x error occurred on connecting to Pub/Sub' do
+      d = create_driver
+
+      @pubsub_mock.topic('topic-test', autocreate: false).times(5) do
+        raise Google::Cloud::UnavailableError.new('TEST')
+      end
+
+      assert_raise Google::Cloud::UnavailableError do
+        d.run {}
+      end
+    end
+
+    test 'topic is nil' do
+      d = create_driver
+
+      @pubsub_mock.topic('topic-test', autocreate: false).once { nil }
+
+      assert_raise Fluent::GcloudPubSub::Error do
+        d.run {}
+      end
+    end
   end
 
   sub_test_case 'publish' do

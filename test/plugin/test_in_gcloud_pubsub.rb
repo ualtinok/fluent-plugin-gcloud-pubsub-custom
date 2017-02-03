@@ -87,6 +87,45 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
     end
   end
 
+  sub_test_case 'start' do
+    setup do
+      @topic_mock = mock!
+      @pubsub_mock = mock!.topic('topic-test').at_least(1) { @topic_mock }
+      stub(Google::Cloud::Pubsub).new { @pubsub_mock }
+    end
+
+    test '40x error occurred on connecting to Pub/Sub' do
+      @topic_mock.subscription('subscription-test').once do
+        raise Google::Cloud::NotFoundError.new('TEST')
+      end
+
+      d = create_driver
+      assert_raise Google::Cloud::NotFoundError do
+        d.run {}
+      end
+    end
+
+    test '50x error occurred on connecting to Pub/Sub' do
+      @topic_mock.subscription('subscription-test').times(5) do
+        raise Google::Cloud::UnavailableError.new('TEST')
+      end
+
+      d = create_driver
+      assert_raise Google::Cloud::UnavailableError do
+        d.run {}
+      end
+    end
+
+    test 'subscription is nil' do
+      @topic_mock.subscription('subscription-test').once { nil }
+
+      d = create_driver
+      assert_raise Fluent::GcloudPubSub::Error do
+        d.run {}
+      end
+    end
+  end
+
   sub_test_case 'emit' do
     class DummyMsgData
       def data
