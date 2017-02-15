@@ -92,15 +92,18 @@ module Fluent
       end
 
       def process(req, res)
+        ret = {'ok' => true}
         case req.path_info
         when '/stop'
           @plugin.stop_pull
         when '/start'
           @plugin.start_pull
+        when '/status'
+          ret['status'] = @plugin.status_of_pull
         else
           raise Error.new "Invalid path_info: #{req.path_info}"
         end
-        render_json(200, {'ok' => true})
+        render_json(200, ret)
       end
     end
 
@@ -157,6 +160,10 @@ module Fluent
     def start_pull
       @stop_pull = false
       log.info "start pull from subscription:#{@subscription}"
+    end
+
+    def status_of_pull
+      @stop_pull ? 'stopped' : 'started'
     end
 
     private

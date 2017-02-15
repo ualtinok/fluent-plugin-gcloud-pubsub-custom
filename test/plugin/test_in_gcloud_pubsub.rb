@@ -1,4 +1,5 @@
 require 'net/http'
+require 'json'
 
 require_relative "../test_helper"
 
@@ -354,6 +355,27 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
         assert_equal("test", tag)
         assert_equal({"foo" => "bar"}, record)
       end
+    end
+
+    test 'get status by http rpc when started' do
+      d = create_driver("#{CONFIG}\npull_interval 1.0\nenable_rpc true")
+      assert_equal(false, d.instance.instance_variable_get(:@stop_pull))
+
+      d.run {
+        res = http_get('/api/in_gcloud_pubsub/pull/status')
+        assert_equal({"ok" => true, "status" => "started"}, JSON.parse(res.body))
+      }
+    end
+
+    test 'get status by http rpc when stopped' do
+      d = create_driver("#{CONFIG}\npull_interval 1.0\nenable_rpc true")
+      d.instance.stop_pull
+      assert_equal(true, d.instance.instance_variable_get(:@stop_pull))
+
+      d.run {
+        res = http_get('/api/in_gcloud_pubsub/pull/status')
+        assert_equal({"ok" => true, "status" => "stopped"}, JSON.parse(res.body))
+      }
     end
   end
 end
