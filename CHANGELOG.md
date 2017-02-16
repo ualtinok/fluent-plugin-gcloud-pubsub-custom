@@ -1,5 +1,10 @@
 ## ChangeLog
 
+### Release 0.4.3 - 2017/02/16
+
+- Input plugin
+  - Add "status" method to the http rpc api
+
 ### Release 0.4.2 - 2017/02/03
 
 - Make retry to get topic/subscription when Pub/Sub API returns 50x code
