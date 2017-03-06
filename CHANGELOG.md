@@ -1,5 +1,9 @@
 ## ChangeLog
 
+### Release 0.4.4 - 2017/03/07
+
+- Bump up google-cloud-pubsub to v0.23.x
+
 ### Release 0.4.3 - 2017/02/16
 
 - Input plugin
