@@ -1,5 +1,9 @@
 ## ChangeLog
 
+### Release 0.4.5 - 2017/04/02
+
+- Bump up google-cloud-pubsub to v0.24.x
+
 ### Release 0.4.4 - 2017/03/07
 
 - Bump up google-cloud-pubsub to v0.23.x
