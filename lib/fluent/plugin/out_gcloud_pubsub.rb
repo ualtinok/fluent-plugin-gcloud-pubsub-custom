@@ -24,7 +24,9 @@ module Fluent
     desc 'Publishing messages count per request to Cloud Pub/Sub.'
     config_param :max_messages,       :integer, :default => 1000
     desc 'Publishing messages bytesize per request to Cloud Pub/Sub.'
-    config_param :max_total_size,     :integer, :default => 4000000  # 4MB
+    config_param :max_total_size,     :integer, :default => 9800000  # 9.8MB
+    desc 'Limit bytesize per message.'
+    config_param :max_message_size,   :integer, :default => 4000000  # 4MB
     desc 'Set output format.'
     config_param :format,             :string,  :default => 'json'
 
@@ -57,6 +59,10 @@ module Fluent
       size = 0
 
       chunk.msgpack_each do |msg|
+        if msg.bytesize > @max_message_size
+          log.warn 'Drop a message because its size exceeds `max_message_size`', size: msg.bytesize
+          next
+        end
         if messages.length + 1 > @max_messages || size + msg.bytesize > @max_total_size
           publish messages
           messages = []
