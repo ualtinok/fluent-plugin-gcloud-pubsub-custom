@@ -24,7 +24,7 @@ module Fluent
     desc 'Publishing messages count per request to Cloud Pub/Sub.'
     config_param :max_messages,       :integer, :default => 1000
     desc 'Publishing messages bytesize per request to Cloud Pub/Sub.'
-    config_param :max_total_size,     :integer, :default => 9800000  # 9.8MB
+    config_param :max_total_size,     :integer, :default => 4000000  # 4MB
     desc 'Set output format.'
     config_param :format,             :string,  :default => 'json'
 
