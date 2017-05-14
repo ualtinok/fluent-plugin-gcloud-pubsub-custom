@@ -1,5 +1,10 @@
 ## ChangeLog
 
+### Release 0.4.6 - 2017/05/14
+
+- Output plugin
+  - Make messages exceeding configured size not be published because Pub/Sub clients cannot receive it
+
 ### Release 0.4.5 - 2017/04/02
 
 - Bump up google-cloud-pubsub to v0.24.x
