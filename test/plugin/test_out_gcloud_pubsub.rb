@@ -30,7 +30,8 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
       assert_equal('key-test', d.instance.key)
       assert_equal(false, d.instance.autocreate_topic)
       assert_equal(1000, d.instance.max_messages)
-      assert_equal(4000000, d.instance.max_total_size)
+      assert_equal(9800000, d.instance.max_total_size)
+      assert_equal(4000000, d.instance.max_message_size)
     end
 
     test '"topic" must be specified' do
@@ -143,6 +144,19 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
       4.times do
         d.emit({"a" => "a" * 400}, @time)
       end
+      d.run
+    end
+
+    test 'messages exceeding "max_message_size" are not published' do
+      d = create_driver(%[
+        project project-test
+        topic topic-test
+        key key-test
+        max_message_size 1000
+      ])
+
+      @publisher.publish.times(0)
+      d.emit({"a" => "a" * 1000}, @time)
       d.run
     end
 

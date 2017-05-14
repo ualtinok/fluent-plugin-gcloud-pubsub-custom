@@ -48,6 +48,7 @@ Use `gcloud_pubsub` output plugin.
   autocreate_topic false
   max_messages 1000
   max_total_size 9800000
+  max_message_size 4000000
   buffer_type file
   buffer_path /path/to/your/buffer
   flush_interval 1s
@@ -74,6 +75,8 @@ Use `gcloud_pubsub` output plugin.
 - `max_total_size` (optional, default: `9800000` = `9.8MB`)
   - Publishing messages bytesize per request to Cloud Pub/Sub. This parameter affects only message size. You should specify a little smaller value than quota.
     - See https://cloud.google.com/pubsub/quotas#other_limits
+- `max_message_size` (optional, default: `4000000` = `4MB`)
+  - Messages exceeding `max_message_size` are not published because Pub/Sub clients cannot receive it.
 - `buffer_type`, `buffer_path`, `flush_interval`, `try_flush_interval`
   - These are fluentd buffer configuration. See http://docs.fluentd.org/articles/buffer-plugin-overview
 - `format` (optional, default: `json`)
