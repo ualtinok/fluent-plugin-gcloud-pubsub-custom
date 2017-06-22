@@ -196,10 +196,10 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       @subscriber.acknowledge(messages).at_least(2)
 
       d = create_driver("#{CONFIG}\npull_threads 2")
-      d.run(expect_emits: 1, timeout: 1)
+      d.run(expect_emits: 2, timeout: 1)
       emits = d.events
 
-      assert_equal(2, emits.length)
+      assert(2 <= emits.length)
       emits.each do |tag, time, record|
         assert_equal("test", tag)
         assert_equal({"foo" => "bar"}, record)
@@ -284,7 +284,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       emits = d.events
 
       # not acknowledged, but already emitted to engine.
-      assert_equal(2, emits.length)
+      assert(2 <= emits.length)
       emits.each do |tag, time, record|
         assert_equal("test", tag)
         assert_equal({"foo" => "bar"}, record)
