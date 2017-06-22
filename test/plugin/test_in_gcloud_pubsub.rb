@@ -165,7 +165,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
     end
 
     test 'empty' do
-      @subscriber.pull(immediate: true, max: 100).once { [] }
+      @subscriber.pull(immediate: true, max: 100).at_least(1) { [] }
       @subscriber.acknowledge.times(0)
 
       d = create_driver
@@ -176,7 +176,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
 
     test 'simple' do
       messages = Array.new(1, DummyMessage.new)
-      @subscriber.pull(immediate: true, max: 100).once { messages }
+      @subscriber.pull(immediate: true, max: 100).at_least(1) { messages }
       @subscriber.acknowledge(messages).once
 
       d = create_driver
@@ -192,8 +192,8 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
 
     test 'multithread' do
       messages = Array.new(1, DummyMessage.new)
-      @subscriber.pull(immediate: true, max: 100).twice { messages }
-      @subscriber.acknowledge(messages).twice
+      @subscriber.pull(immediate: true, max: 100).at_least(2) { messages }
+      @subscriber.acknowledge(messages).at_least(2)
 
       d = create_driver("#{CONFIG}\npull_threads 2")
       d.run(expect_emits: 1, timeout: 3)
@@ -212,7 +212,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
         DummyMessageWithTagKey.new('tag2'),
         DummyMessage.new
       ]
-      @subscriber.pull(immediate: true, max: 100).once { messages }
+      @subscriber.pull(immediate: true, max: 100).at_least(1) { messages }
       @subscriber.acknowledge(messages).once
 
       d = create_driver("#{CONFIG}\ntag_key test_tag_key")
@@ -232,7 +232,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
 
     test 'invalid messages with parse_error_action exception ' do
       messages = Array.new(1, DummyInvalidMessage.new)
-      @subscriber.pull(immediate: true, max: 100).once { messages }
+      @subscriber.pull(immediate: true, max: 100).at_least(1) { messages }
       @subscriber.acknowledge.times(0)
 
       d = create_driver
@@ -242,8 +242,8 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
 
     test 'invalid messages with parse_error_action warning' do
       messages = Array.new(1, DummyInvalidMessage.new)
-      @subscriber.pull(immediate: true, max: 100).once { messages }
-      @subscriber.acknowledge(messages).once
+      @subscriber.pull(immediate: true, max: 100).at_least(1) { messages }
+      @subscriber.acknowledge(messages).at_least(1)
 
       d = create_driver("#{CONFIG}\nparse_error_action warning")
       d.run(expect_emits: 1, timeout: 3)
@@ -253,7 +253,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
     test 'retry if raised error' do
       class UnknownError < StandardError
       end
-      @subscriber.pull(immediate: true, max: 100).twice { raise UnknownError.new('test') }
+      @subscriber.pull(immediate: true, max: 100).at_least(2) { raise UnknownError.new('test') }
       @subscriber.acknowledge.times(0)
 
       d = create_driver(CONFIG + 'pull_interval 0.5')
@@ -264,7 +264,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
     end
 
     test 'retry if raised RetryableError on pull' do
-      @subscriber.pull(immediate: true, max: 100).twice { raise Google::Cloud::UnavailableError.new('TEST') }
+      @subscriber.pull(immediate: true, max: 100).at_least(2) { raise Google::Cloud::UnavailableError.new('TEST') }
       @subscriber.acknowledge.times(0)
 
       d = create_driver("#{CONFIG}\npull_interval 0.5")
@@ -276,7 +276,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
 
     test 'retry if raised RetryableError on acknowledge' do
       messages = Array.new(1, DummyMessage.new)
-      @subscriber.pull(immediate: true, max: 100).twice { messages }
+      @subscriber.pull(immediate: true, max: 100).at_least(2) { messages }
       @subscriber.acknowledge(messages).twice { raise Google::Cloud::UnavailableError.new('TEST') }
 
       d = create_driver("#{CONFIG}\npull_interval 0.5")
