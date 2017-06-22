@@ -14,13 +14,6 @@ module Fluent::Plugin
 
     DEFAULT_PARSER_TYPE = 'json'
 
-    class << self
-      unless method_defined?(:desc)
-        def desc(description)
-        end
-      end
-    end
-
     class FailedParseError < StandardError
     end
 
@@ -58,14 +51,6 @@ module Fluent::Plugin
 
     config_section :parse do
       config_set_default :@type, DEFAULT_PARSER_TYPE
-    end
-
-    unless method_defined?(:log)
-      define_method("log") { $log }
-    end
-
-    unless method_defined?(:router)
-      define_method("router") { Fluent::Engine }
     end
 
     class RPCServlet < WEBrick::HTTPServlet::AbstractServlet

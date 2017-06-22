@@ -11,13 +11,6 @@ module Fluent::Plugin
     DEFAULT_BUFFER_TYPE = "memory"
     DEFAULT_FORMATTER_TYPE = "json"
 
-    class << self
-      unless method_defined?(:desc)
-        def desc(description)
-        end
-      end
-    end
-
     desc 'Set your GCP project.'
     config_param :project,            :string,  :default => nil
     desc 'Set your credential file path.'
@@ -41,14 +34,6 @@ module Fluent::Plugin
 
     config_section :format do
       config_set_default :@type, DEFAULT_FORMATTER_TYPE
-    end
-
-    unless method_defined?(:log)
-      define_method("log") { $log }
-    end
-
-    unless method_defined?(:router)
-      define_method("router") { Fluent::Engine }
     end
 
     def configure(conf)
