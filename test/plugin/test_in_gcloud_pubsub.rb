@@ -196,7 +196,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       @subscriber.acknowledge(messages).at_least(2)
 
       d = create_driver("#{CONFIG}\npull_threads 2")
-      d.run(expect_emits: 1, timeout: 3)
+      d.run(expect_emits: 1, timeout: 1)
       emits = d.events
 
       assert_equal(2, emits.length)
