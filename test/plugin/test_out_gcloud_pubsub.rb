@@ -1,6 +1,11 @@
+# coding: utf-8
 require_relative "../test_helper"
+require "fluent/test/driver/output"
+require "fluent/test/helpers"
 
 class GcloudPubSubOutputTest < Test::Unit::TestCase
+  include Fluent::Test::Helpers
+
   CONFIG = %[
     project project-test
     topic topic-test
@@ -10,7 +15,7 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
   ReRaisedError = Class.new(RuntimeError)
 
   def create_driver(conf = CONFIG)
-    Fluent::Test::BufferedOutputTestDriver.new(Fluent::GcloudPubSubOutput).configure(conf)
+    Fluent::Test::Driver::Output.new(Fluent::Plugin::GcloudPubSubOutput).configure(conf)
   end
 
   setup do
@@ -117,17 +122,18 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
     end
 
     setup do
-      @time = Time.parse('2016-07-09 11:12:13 UTC').to_i
+      @time = event_time('2016-07-09 11:12:13 UTC')
     end
 
     test 'messages are divided into "max_messages"' do
       d = create_driver
       @publisher.publish.times(2)
-      # max_messages is default 1000
-      1001.times do |i|
-        d.emit({"a" => i}, @time)
+      d.run(default_tag: "test") do
+        # max_messages is default 1000
+        1001.times do |i|
+          d.feed(@time, {"a" => i})
+        end
       end
-      d.run
     end
 
     test 'messages are divided into "max_total_size"' do
@@ -140,11 +146,12 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
       ])
 
       @publisher.publish.times(2)
-      # 400 * 4 / max_total_size = twice
-      4.times do
-        d.emit({"a" => "a" * 400}, @time)
+      d.run(default_tag: "test") do
+        # 400 * 4 / max_total_size = twice
+        4.times do
+          d.feed(@time, {"a" => "a" * 400})
+        end
       end
-      d.run
     end
 
     test 'messages exceeding "max_message_size" are not published' do
@@ -156,24 +163,27 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
       ])
 
       @publisher.publish.times(0)
-      d.emit({"a" => "a" * 1000}, @time)
-      d.run
+      d.run(default_tag: "test") do
+        d.feed(@time, {"a" => "a" * 1000})
+      end
     end
 
     test 'accept "ASCII-8BIT" encoded multibyte strings' do
       # on fluentd v0.14, all strings treated as "ASCII-8BIT" except specified encoding.
       d = create_driver
       @publisher.publish.once
-      d.emit({"a" => "あああ".force_encoding("ASCII-8BIT")}, @time)
-      d.run
+      d.run(default_tag: "test") do
+        d.feed(@time, {"a" => "あああ".force_encoding("ASCII-8BIT")})
+      end
     end
 
     test 'reraise unexpected errors' do
       d = create_driver
       @publisher.publish.once { raise ReRaisedError }
       assert_raises ReRaisedError do
-        d.emit([{'a' => 1, 'b' => 2}])
-        d.run
+        d.run(default_tag: "test") do
+          d.feed([{'a' => 1, 'b' => 2}])
+        end
       end
     end
 
@@ -181,8 +191,9 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
       d = create_driver
       @publisher.publish.once { raise Google::Cloud::UnavailableError.new('TEST') }
       assert_raises Fluent::GcloudPubSub::RetryableError do
-        d.emit([{'a' => 1, 'b' => 2}])
-        d.run
+        d.run(default_tag: "test") do
+          d.feed([{'a' => 1, 'b' => 2}])
+        end
       end
     end
   end
