@@ -2,6 +2,7 @@ require 'net/http'
 require 'json'
 
 require_relative "../test_helper"
+require "fluent/test/driver/input"
 
 class GcloudPubSubInputTest < Test::Unit::TestCase
   CONFIG = %[
@@ -29,7 +30,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
   end
 
   def create_driver(conf=CONFIG)
-    Fluent::Test::InputTestDriver.new(Fluent::GcloudPubSubInput).configure(conf)
+    Fluent::Test::Driver::Input.new(Fluent::Plugin::GcloudPubSubInput).configure(conf)
   end
 
   def http_get(path)
@@ -168,11 +169,9 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       @subscriber.acknowledge.times(0)
 
       d = create_driver
-      d.run {
-        # d.run sleeps 0.5 sec
-      }
+      d.run(expect_emits: 1, timeout: 3)
 
-      assert_equal(true, d.emits.empty?)
+      assert_true d.events.empty?
     end
 
     test 'simple' do
@@ -181,10 +180,8 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       @subscriber.acknowledge(messages).once
 
       d = create_driver
-      d.run {
-        # d.run sleeps 0.5 sec
-      }
-      emits = d.emits
+      d.run(expect_emits: 1, timeout: 3)
+      emits = d.events
 
       assert_equal(1, emits.length)
       emits.each do |tag, time, record|
@@ -199,10 +196,8 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       @subscriber.acknowledge(messages).twice
 
       d = create_driver("#{CONFIG}\npull_threads 2")
-      d.run {
-        # d.run sleeps 0.5 sec
-      }
-      emits = d.emits
+      d.run(expect_emits: 1, timeout: 3)
+      emits = d.events
 
       assert_equal(2, emits.length)
       emits.each do |tag, time, record|
@@ -221,10 +216,8 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       @subscriber.acknowledge(messages).once
 
       d = create_driver("#{CONFIG}\ntag_key test_tag_key")
-      d.run {
-        # d.run sleeps 0.5 sec
-      }
-      emits = d.emits
+      d.run(expect_emits: 1, timeout: 3)
+      emits = d.events
 
       assert_equal(3, emits.length)
       # test tag
@@ -243,10 +236,8 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       @subscriber.acknowledge.times(0)
 
       d = create_driver
-      d.run {
-        # d.run sleeps 0.5 sec
-      }
-      assert_equal(true, d.emits.empty?)
+      d.run(expect_emits: 1, timeout: 3)
+      assert_true d.events.empty?
     end
 
     test 'invalid messages with parse_error_action warning' do
@@ -255,10 +246,8 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       @subscriber.acknowledge(messages).once
 
       d = create_driver("#{CONFIG}\nparse_error_action warning")
-      d.run {
-        # d.run sleeps 0.5 sec
-      }
-      assert_equal(true, d.emits.empty?)
+      d.run(expect_emits: 1, timeout: 3)
+      assert_true d.events.empty?
     end
 
     test 'retry if raised error' do
@@ -268,12 +257,10 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       @subscriber.acknowledge.times(0)
 
       d = create_driver(CONFIG + 'pull_interval 0.5')
-      d.run {
-        sleep 0.1 # + 0.5s
-      }
+      d.run(expect_emits: 1, timeout: 0.8)
 
       assert_equal(0.5, d.instance.pull_interval)
-      assert_equal(true, d.emits.empty?)
+      assert_true d.events.empty?
     end
 
     test 'retry if raised RetryableError on pull' do
@@ -281,12 +268,10 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       @subscriber.acknowledge.times(0)
 
       d = create_driver("#{CONFIG}\npull_interval 0.5")
-      d.run {
-        sleep 0.1 # + 0.5s
-      }
+      d.run(expect_emits: 1, timeout: 0.8)
 
       assert_equal(0.5, d.instance.pull_interval)
-      assert_equal(true, d.emits.empty?)
+      assert_true d.events.empty?
     end
 
     test 'retry if raised RetryableError on acknowledge' do
@@ -295,10 +280,8 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       @subscriber.acknowledge(messages).twice { raise Google::Cloud::UnavailableError.new('TEST') }
 
       d = create_driver("#{CONFIG}\npull_interval 0.5")
-      d.run {
-        sleep 0.1 # + 0.5s
-      }
-      emits = d.emits
+      d.run(expect_emits: 2, timeout: 3)
+      emits = d.events
 
       # not acknowledged, but already emitted to engine.
       assert_equal(2, emits.length)
@@ -321,10 +304,10 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
         sleep 0.75
         # d.run sleeps 0.5 sec
       }
-      emits = d.emits
+      emits = d.events
 
       assert_equal(1, emits.length)
-      assert_equal(true, d.instance.instance_variable_get(:@stop_pull))
+      assert_true d.instance.instance_variable_get(:@stop_pull)
 
       emits.each do |tag, time, record|
         assert_equal("test", tag)
@@ -341,15 +324,15 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       d.instance.stop_pull
       assert_equal(true, d.instance.instance_variable_get(:@stop_pull))
 
-      d.run {
+      d.run(expect_emits: 1, timeout: 3) {
         http_get('/api/in_gcloud_pubsub/pull/start')
         sleep 0.75
         # d.run sleeps 0.5 sec
       }
-      emits = d.emits
+      emits = d.events
 
       assert_equal(true, emits.length > 0)
-      assert_equal(false, d.instance.instance_variable_get(:@stop_pull))
+      assert_false d.instance.instance_variable_get(:@stop_pull)
 
       emits.each do |tag, time, record|
         assert_equal("test", tag)
@@ -359,7 +342,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
 
     test 'get status by http rpc when started' do
       d = create_driver("#{CONFIG}\npull_interval 1.0\nenable_rpc true")
-      assert_equal(false, d.instance.instance_variable_get(:@stop_pull))
+      assert_false d.instance.instance_variable_get(:@stop_pull)
 
       d.run {
         res = http_get('/api/in_gcloud_pubsub/pull/status')
@@ -370,7 +353,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
     test 'get status by http rpc when stopped' do
       d = create_driver("#{CONFIG}\npull_interval 1.0\nenable_rpc true")
       d.instance.stop_pull
-      assert_equal(true, d.instance.instance_variable_get(:@stop_pull))
+      assert_true d.instance.instance_variable_get(:@stop_pull)
 
       d.run {
         res = http_get('/api/in_gcloud_pubsub/pull/status')
