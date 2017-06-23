@@ -1,21 +1,18 @@
 require 'json'
 require 'webrick'
 
-require 'fluent/input'
-require 'fluent/parser'
+require 'fluent/plugin/input'
+require 'fluent/plugin/parser'
 
 require 'fluent/plugin/gcloud_pubsub/client'
 
-module Fluent
+module Fluent::Plugin
   class GcloudPubSubInput < Input
     Fluent::Plugin.register_input('gcloud_pubsub', self)
 
-    class << self
-      unless method_defined?(:desc)
-        def desc(description)
-        end
-      end
-    end
+    helpers :compat_parameters, :parser, :thread
+
+    DEFAULT_PARSER_TYPE = 'json'
 
     class FailedParseError < StandardError
     end
@@ -41,7 +38,7 @@ module Fluent
     desc 'Set number of threads to pull messages.'
     config_param :pull_threads,       :integer, default: 1
     desc 'Set input format.'
-    config_param :format,             :string,  default: 'json'
+    config_param :format,             :string,  default: DEFAULT_PARSER_TYPE
     desc 'Set error type when parsing messages fails.'
     config_param :parse_error_action, :enum,    default: :exception, list: [:exception, :warning]
     # for HTTP RPC
@@ -52,12 +49,8 @@ module Fluent
     desc 'Port for HTTP RPC.'
     config_param :rpc_port,           :integer, default: 24680
 
-    unless method_defined?(:log)
-      define_method("log") { $log }
-    end
-
-    unless method_defined?(:router)
-      define_method("router") { Fluent::Engine }
+    config_section :parse do
+      config_set_default :@type, DEFAULT_PARSER_TYPE
     end
 
     class RPCServlet < WEBrick::HTTPServlet::AbstractServlet
@@ -108,6 +101,7 @@ module Fluent
     end
 
     def configure(conf)
+      compat_parameters_convert(conf, :parser)
       super
       @rpc_srv = nil
       @rpc_thread = nil
@@ -119,8 +113,7 @@ module Fluent
                        method(:dynamic_tag)
                      end
 
-      @parser = Plugin.new_parser(@format)
-      @parser.configure(conf)
+      @parser = parser_create
     end
 
     def start
@@ -133,23 +126,22 @@ module Fluent
       @emit_guard = Mutex.new
       @stop_subscribing = false
       @subscribe_threads = []
-      @pull_threads.times do
-        @subscribe_threads.push Thread.new(&method(:subscribe))
+      @pull_threads.times do |idx|
+        @subscribe_threads.push thread_create("in_gcloud_pubsub_subscribe_#{idx}".to_sym, &method(:subscribe))
       end
     end
 
     def shutdown
-      super
       if @rpc_srv
         @rpc_srv.shutdown
         @rpc_srv = nil
       end
       if @rpc_thread
-        @rpc_thread.join
         @rpc_thread = nil
       end
       @stop_subscribing = true
       @subscribe_threads.each(&:join)
+      super
     end
 
     def stop_pull
@@ -187,7 +179,7 @@ module Fluent
         }
       )
       @rpc_srv.mount('/api/in_gcloud_pubsub/pull/', RPCServlet, self)
-      @rpc_thread = Thread.new {
+      @rpc_thread = thread_create(:in_gcloud_pubsub_rpc_thread){
         @rpc_srv.start
       }
     end
@@ -225,7 +217,7 @@ module Fluent
 
     def process(messages)
       event_streams = Hash.new do |hsh, key|
-        hsh[key] = MultiEventStream.new
+        hsh[key] = Fluent::MultiEventStream.new
       end
 
       messages.each do |m|

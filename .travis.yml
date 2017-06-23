@@ -9,7 +9,6 @@ rvm:
 
 gemfile:
  - Gemfile
- - Gemfile.v0.12
 
 branches:
   only:
