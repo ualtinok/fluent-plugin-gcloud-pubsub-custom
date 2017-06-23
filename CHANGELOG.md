@@ -1,5 +1,10 @@
 ## ChangeLog
 
+### Release 1.0.0 - 2017/06/23
+
+- Fluentd v0.14 ready
+  - Fluentd v0.12 is not supported in the later version
+
 ### Release 0.4.6 - 2017/05/14
 
 - Output plugin
