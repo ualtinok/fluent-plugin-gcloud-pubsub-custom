@@ -19,6 +19,13 @@ This plugin is forked from https://github.com/mdoi/fluent-plugin-gcloud-pubsub
 - Add a pull style subscription to the topic
 - Download your credential (json) or [set scope on GCE instance](https://cloud.google.com/compute/docs/api/how-tos/authorization)
 
+## Requirements
+
+| fluent-plugin-gcloud-pubsub-custom | fluentd | ruby |
+|------------------------|---------|------|
+| >= 1.0.0 | >= v0.14.0 | >= 2.1 |
+|  < 1.0.0 | >= v0.12.0 | >= 1.9 |
+
 ## Installation
 
 Install by gem:
