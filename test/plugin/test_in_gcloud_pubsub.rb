@@ -183,7 +183,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
       d.run(expect_emits: 1, timeout: 3)
       emits = d.events
 
-      assert_equal(1, emits.length)
+      assert(1 <= emits.length)
       emits.each do |tag, time, record|
         assert_equal("test", tag)
         assert_equal({"foo" => "bar"}, record)
