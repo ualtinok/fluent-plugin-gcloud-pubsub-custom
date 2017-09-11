@@ -108,7 +108,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
     end
 
     test '50x error occurred on connecting to Pub/Sub' do
-      @topic_mock.subscription('subscription-test').times(5) do
+      @topic_mock.subscription('subscription-test').once do
         raise Google::Cloud::UnavailableError.new('TEST')
       end
 

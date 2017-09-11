@@ -94,7 +94,7 @@ class GcloudPubSubOutputTest < Test::Unit::TestCase
     test '50x error occurred on connecting to Pub/Sub' do
       d = create_driver
 
-      @pubsub_mock.topic('topic-test', autocreate: false).times(5) do
+      @pubsub_mock.topic('topic-test', autocreate: false).once do
         raise Google::Cloud::UnavailableError.new('TEST')
       end
 
