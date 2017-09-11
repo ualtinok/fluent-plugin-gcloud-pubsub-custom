@@ -1,5 +1,9 @@
 ## ChangeLog
 
+### Release 1.0.2 - 2017/09/11
+
+- Bump up google-cloud-pubsub to v0.27.x
+
 ### Release 1.0.1 - 2017/09/05
 
 - Bump up google-cloud-pubsub to v0.26.x
