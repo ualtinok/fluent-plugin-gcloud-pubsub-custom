@@ -1,5 +1,4 @@
 require 'google/cloud/pubsub'
-require 'retryable'
 
 module Fluent
   module GcloudPubSub
@@ -9,14 +8,9 @@ module Fluent
     end
 
     class Publisher
-      RETRY_COUNT = 5
-      RETRYABLE_ERRORS = [Google::Cloud::UnavailableError, Google::Cloud::DeadlineExceededError, Google::Cloud::InternalError]
-
       def initialize(project, key, topic_name, autocreate_topic)
-        Retryable.retryable(tries: RETRY_COUNT, on: RETRYABLE_ERRORS) do
-          pubsub = Google::Cloud::Pubsub.new project: project, keyfile: key
-          @client = pubsub.topic topic_name, autocreate: autocreate_topic
-        end
+        pubsub = Google::Cloud::Pubsub.new project: project, keyfile: key
+        @client = pubsub.topic topic_name, autocreate: autocreate_topic
         raise Error.new "topic:#{topic_name} does not exist." if @client.nil?
       end
 
@@ -32,15 +26,10 @@ module Fluent
     end
 
     class Subscriber
-      RETRY_COUNT = 5
-      RETRYABLE_ERRORS = [Google::Cloud::UnavailableError, Google::Cloud::DeadlineExceededError, Google::Cloud::InternalError]
-
       def initialize(project, key, topic_name, subscription_name)
-        Retryable.retryable(tries: RETRY_COUNT, on: RETRYABLE_ERRORS) do
-          pubsub = Google::Cloud::Pubsub.new project: project, keyfile: key
-          topic = pubsub.topic topic_name
-          @client = topic.subscription subscription_name
-        end
+        pubsub = Google::Cloud::Pubsub.new project: project, keyfile: key
+        topic = pubsub.topic topic_name
+        @client = topic.subscription subscription_name
         raise Error.new "subscription:#{subscription_name} does not exist." if @client.nil?
       end
 
