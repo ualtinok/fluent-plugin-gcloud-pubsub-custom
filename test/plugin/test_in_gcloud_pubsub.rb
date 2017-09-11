@@ -277,7 +277,7 @@ class GcloudPubSubInputTest < Test::Unit::TestCase
     test 'retry if raised RetryableError on acknowledge' do
       messages = Array.new(1, DummyMessage.new)
       @subscriber.pull(immediate: true, max: 100).at_least(2) { messages }
-      @subscriber.acknowledge(messages).twice { raise Google::Cloud::UnavailableError.new('TEST') }
+      @subscriber.acknowledge(messages).at_least(2) { raise Google::Cloud::UnavailableError.new('TEST') }
 
       d = create_driver("#{CONFIG}\npull_interval 0.5")
       d.run(expect_emits: 2, timeout: 3)
