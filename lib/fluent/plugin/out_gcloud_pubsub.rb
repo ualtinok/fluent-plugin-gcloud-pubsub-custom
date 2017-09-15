@@ -39,13 +39,13 @@ module Fluent::Plugin
     def configure(conf)
       compat_parameters_convert(conf, :buffer, :formatter)
       super
+      placeholder_validate!(:topic, @topic)
       @formatter = formatter_create
     end
 
     def start
       super
-      @publisher = Fluent::GcloudPubSub::Publisher.new @project, @key, @topic, @autocreate_topic
-      log.debug "connected topic:#{@topic} in project #{@project}"
+      @publisher = Fluent::GcloudPubSub::Publisher.new @project, @key, @autocreate_topic
     end
 
     def format(tag, time, record)
@@ -61,6 +61,8 @@ module Fluent::Plugin
     end
 
     def write(chunk)
+      topic = extract_placeholders(@topic, chunk.metadata)
+
       messages = []
       size = 0
 
@@ -70,7 +72,7 @@ module Fluent::Plugin
           next
         end
         if messages.length + 1 > @max_messages || size + msg.bytesize > @max_total_size
-          publish messages
+          publish(topic, messages)
           messages = []
           size = 0
         end
@@ -79,7 +81,7 @@ module Fluent::Plugin
       end
 
       if messages.length > 0
-        publish messages
+        publish(topic, messages)
       end
     rescue Fluent::GcloudPubSub::RetryableError => ex
       log.warn "Retryable error occurs. Fluentd will retry.", error_message: ex.to_s, error_class: ex.class.to_s
@@ -92,9 +94,9 @@ module Fluent::Plugin
 
     private
 
-    def publish(messages)
-      log.debug "send message topic:#{@topic} length:#{messages.length} size:#{messages.map(&:bytesize).inject(:+)}"
-      @publisher.publish messages
+    def publish(topic, messages)
+      log.debug "send message topic:#{topic} length:#{messages.length} size:#{messages.map(&:bytesize).inject(:+)}"
+      @publisher.publish(topic, messages)
     end
   end
 end

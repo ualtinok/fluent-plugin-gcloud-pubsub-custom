@@ -8,20 +8,29 @@ module Fluent
     end
 
     class Publisher
-      def initialize(project, key, topic_name, autocreate_topic)
-        pubsub = Google::Cloud::Pubsub.new project: project, keyfile: key
-        @client = pubsub.topic topic_name
-        if @client.nil?
-          if autocreate_topic
-            @client = pubsub.create_topic topic_name
-          else
-            raise Error.new "topic:#{topic_name} does not exist."
-          end
-        end
+      def initialize(project, key, autocreate_topic)
+        @pubsub = Google::Cloud::Pubsub.new project: project, keyfile: key
+        @autocreate_topic = autocreate_topic
+        @topics = {}
       end
 
-      def publish(messages)
-        @client.publish do |batch|
+      def topic(topic_name)
+        return @topics[topic_name] if @topics.has_key? topic_name
+
+        client = @pubsub.topic topic_name
+        if client.nil? && @autocreate_topic
+          client = @pubsub.create_topic topic_name
+        end
+        if client.nil?
+          raise Error.new "topic:#{topic_name} does not exist."
+        end
+
+        @topics[topic_name] = client
+        client
+      end
+
+      def publish(topic_name, messages)
+        topic(topic_name).publish do |batch|
           messages.each do |m|
             batch.publish m
           end
