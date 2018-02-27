@@ -1,8 +1,8 @@
-require 'fluent/plugin/output'
+require 'fluent/output'
 
 require 'fluent/plugin/gcloud_pubsub/client'
 
-module Fluent::Plugin
+module Fluent
   class GcloudPubSubOutput < Output
     Fluent::Plugin.register_output('gcloud_pubsub', self)
 
@@ -15,6 +15,10 @@ module Fluent::Plugin
     config_param :project,            :string,  :default => nil
     desc 'Set your credential file path.'
     config_param :key,                :string,  :default => nil
+    desc 'Set uniq key for pubsub.'
+    config_param :uniqkey,            :string,  :default => 'impid'
+    desc 'Set topic name to publish.'
+    config_param :timestampkey,            :string,  :default => 'ts'
     desc 'Set topic name to publish.'
     config_param :topic,              :string
     desc "If set to `true`, specified topic will be created when it doesn't exist."
@@ -48,8 +52,9 @@ module Fluent::Plugin
       log.debug "connected topic:#{@topic} in project #{@project}"
     end
 
+
     def format(tag, time, record)
-      @formatter.format(tag, time, record).to_msgpack
+      [tag, time, record].to_msgpack
     end
 
     def formatted_to_msgpack_binary?
@@ -65,17 +70,22 @@ module Fluent::Plugin
       size = 0
 
       chunk.msgpack_each do |msg|
-        if msg.bytesize > @max_message_size
+        lemsg = @formatter.format(msg[0], msg[1], msg[2])
+        if lemsg.bytesize > @max_message_size
           log.warn 'Drop a message because its size exceeds `max_message_size`', size: msg.bytesize
           next
         end
-        if messages.length + 1 > @max_messages || size + msg.bytesize > @max_total_size
+        if messages.length + 1 > @max_messages || size + lemsg.bytesize > @max_total_size
           publish messages
           messages = []
           size = 0
         end
-        messages << msg
-        size += msg.bytesize
+        if msg[2][@uniqkey] && msg[2][@timestampkey] && msg[2][@timestampkey].is_a?(String) && msg[2][@uniqkey].is_a?(String)
+          messages << [lemsg, msg[2][@uniqkey], msg[2][@timestampkey].gsub!('.', '')]
+          size += lemsg.bytesize
+        else
+          log.warn "Got an unparsable message.", message: lemsg.to_s
+        end
       end
 
       if messages.length > 0
@@ -93,7 +103,7 @@ module Fluent::Plugin
     private
 
     def publish(messages)
-      log.debug "send message topic:#{@topic} length:#{messages.length} size:#{messages.map(&:bytesize).inject(:+)}"
+      #log.debug "send message topic:#{@topic} length:#{messages.length} size:#{messages.map(&:bytesize).inject(:+)}"
       @publisher.publish messages
     end
   end
