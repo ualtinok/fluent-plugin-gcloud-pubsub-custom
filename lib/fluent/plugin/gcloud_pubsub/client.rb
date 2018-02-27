@@ -23,7 +23,7 @@ module Fluent
       def publish(messages)
         @client.publish do |batch|
           messages.each do |m|
-            batch.publish m
+            batch.publish m[0], uniq: m[1], ts: m[2]
           end
         end
       rescue Google::Cloud::UnavailableError, Google::Cloud::DeadlineExceededError, Google::Cloud::InternalError => ex
