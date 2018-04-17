@@ -2,7 +2,7 @@ require 'fluent/output'
 
 require 'fluent/plugin/gcloud_pubsub/client'
 
-module Fluent
+module Fluent::Plugin
   class GcloudPubSubOutput < Output
     Fluent::Plugin.register_output('gcloud_pubsub', self)
 
@@ -95,6 +95,10 @@ module Fluent
       log.warn "Retryable error occurs. Fluentd will retry.", error_message: ex.to_s, error_class: ex.class.to_s
       raise ex
     rescue => ex
+      if ex.class.to_s == "EncodingError"
+        log.error "encoding error", error_message: ex.to_s, error_class: ex.class.to_s
+        return
+      end
       log.error "unexpected error", error_message: ex.to_s, error_class: ex.class.to_s
       log.error_backtrace
       raise ex
